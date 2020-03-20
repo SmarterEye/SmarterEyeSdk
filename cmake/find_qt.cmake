@@ -1,10 +1,12 @@
 if (WIN32)
     # set stuff for windows
+#    SET(Qt5_PATH /path/to/your/qt/lib)
 else()
     # set stuff for other systems
-    # if you build custom opencv in linux, set following OpenCV_Dir
-     SET(CMAKE_PREFIX_PATH /opt/Qt5.12.7/5.12.7/gcc_64)
+     SET(Qt5_PATH /opt/Qt5.12.7/5.12.7/gcc_64)
 endif()
+
+SET(CMAKE_PREFIX_PATH ${Qt5_PATH})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)

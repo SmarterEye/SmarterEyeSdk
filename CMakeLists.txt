@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(smarter-eye-sdk LANGUAGES C CXX)
+project(smarter_eye_sdk LANGUAGES C CXX)
 set(SDK_VERSION 0.2.25)
 
 include(cmake/common.cmake)
@@ -14,12 +14,10 @@ set(SDK_ROOT "${PROJECT_SOURCE_DIR}")
 
 LIST(APPEND CMAKE_MODULE_PATH ${SDK_ROOT}/cmake)
 
-include(cmake/find_opencv.cmake)
+#include(cmake/find_opencv.cmake)
 include(cmake/find_qt.cmake)
 
-add_subdirectory(${SDK_ROOT}/3rdparty/QAsioSocket)
-
-include_directories(${SDK_ROOT}/include)
+include_directories(${SDK_ROOT}/include/${SDK_NAME})
 include_directories(${SDK_ROOT}/3rdparty/QAsioSocket/include)
 
 # src
@@ -42,14 +40,73 @@ add_definitions(
     -DSTEREOCAMERA_LIBRARY
     )
 
+
+set(SDK_INCS)
 foreach(MODULE_DIR ${SDK_MODULES})
     include_directories(${MODULE_DIR})
     aux_source_directory(${MODULE_DIR} SDK_SRCS)
+    file(GLOB CUR_INCS "${MODULE_DIR}/*.h")
+    list(APPEND SDK_INCS ${CUR_INCS})
 endforeach()
 
-add_library(smarter_eye STATIC ${SDK_SRCS})
-add_dependencies(smarter_eye QAsioSocket)
-target_link_libraries(smarter_eye Qt5::Core Qt5::Network)
-set_target_properties(smarter_eye PROPERTIES
-        VERSION ${SDK_VERSION}
-        )
+# output
+
+set(OUTPUT_DIR "${SDK_ROOT}/_output")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/bin)
+
+# submodule
+add_subdirectory(${SDK_ROOT}/3rdparty/QAsioSocket)
+set_target_properties(QAsioSocket
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib/3rdparty
+    LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib/3rdparty
+    RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/bin/3rdparty
+    )
+
+# rpath
+set(SDK_CMAKE_RPATH
+    "${CMAKE_INSTALL_PREFIX}/lib/3rdparty"
+    "${Qt5_PATH}/lib"
+    )
+
+# build shared
+qt5_wrap_cpp(MOC_SRC ${SDK_SRCS} ${SDK_INCS})
+add_library(${SDK_NAME} SHARED ${SDK_SRCS} ${SDK_INCS} ${MOC_SRC})
+add_dependencies(${SDK_NAME} QAsioSocket)
+target_link_libraries(${SDK_NAME} QAsioSocket Qt5::Core Qt5::Network)
+set_target_properties(${SDK_NAME} PROPERTIES
+    VERSION ${SDK_VERSION}
+    INSTALL_RPATH "${SDK_CMAKE_RPATH}"
+    )
+
+# install
+set(SDK_CMAKE_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/${SDK_NAME}")
+set(SDK_CMAKE_BINDIR "${CMAKE_INSTALL_PREFIX}/bin")
+set(SDK_CMAKE_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+
+install(TARGETS ${SDK_NAME}
+    ARCHIVE DESTINATION ${SDK_CMAKE_LIBDIR}
+    LIBRARY DESTINATION ${SDK_CMAKE_LIBDIR}
+    RUNTIME DESTINATION ${SDK_CMAKE_BINDIR}
+    )
+
+if(OS_WIN)
+    set(__3rdparty_src_dir ${OUTPUT_DIR}/bin/3rdparty)
+    set(__3rdparty_dst_dir ${SDK_CMAKE_BINDIR})
+else()
+    set(__3rdparty_src_dir ${OUTPUT_DIR}/lib/3rdparty)
+    set(__3rdparty_dst_dir ${SDK_CMAKE_LIBDIR})
+endif()
+
+install(DIRECTORY "${__3rdparty_src_dir}"
+    DESTINATION "${__3rdparty_dst_dir}"
+    FILES_MATCHING PATTERN "*.so*" PATTERN "*.dll" PATTERN "*.dylib"
+    )
+
+install(DIRECTORY
+    "${SDK_ROOT}/include"
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    )
