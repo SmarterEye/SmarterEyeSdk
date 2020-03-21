@@ -29,6 +29,7 @@ set(SDK_MODULES
     src/Satp
     src/SatpExt
     src/StereoCamera
+    src/ImageUtils
     )
 
 add_definitions(
@@ -38,6 +39,7 @@ add_definitions(
     -DSATP_LIBRARY
     -DSATPEXT_LIBRARY
     -DSTEREOCAMERA_LIBRARY
+    -DIMAGEUTILS_LIBRARY
     )
 
 
