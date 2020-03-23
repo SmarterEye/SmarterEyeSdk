@@ -26,8 +26,8 @@ StereoListener::StereoListener()
         : it_(node_handler_)
 {
     gray_sub_ = it_.subscribe("zkhy_stereo/left/gray", 1, &StereoListener::grayCallback, this);
-    color_sub_ = it_.subscribe("zkhy_stereo/left/color", 1, &StereoListener::colorCallback, this);
-    disparity_sub_ = it_.subscribe("zkhy_stereo/disparity/raw", 1, &StereoListener::disparityCallback, this);
+//    color_sub_ = it_.subscribe("zkhy_stereo/left/color", 1, &StereoListener::colorCallback, this);
+//    disparity_sub_ = it_.subscribe("zkhy_stereo/disparity/raw", 1, &StereoListener::disparityCallback, this);
 }
 
 StereoListener::~StereoListener()
@@ -44,7 +44,7 @@ void StereoListener::grayCallback(const sensor_msgs::ImageConstPtr &msg)
         return;
     }
 
-    std::cout << image_ptr->image.cols;
+    std::cout << image_ptr->image.cols << " : " << image_ptr->image.rows << std::endl;
 }
 
 void StereoListener::colorCallback(const sensor_msgs::ImageConstPtr &msg)

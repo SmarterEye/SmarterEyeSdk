@@ -20,6 +20,8 @@ public:
     StereoPublisher();
     ~StereoPublisher();
 
+    void foo();
+
 private:
     ros::NodeHandle node_handler_;
     image_transport::ImageTransport it_;

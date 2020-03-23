@@ -34,7 +34,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mDisparityMat);
 
-//        std::cout << "update disparity mat" << std::endl;
+        std::cout << "update disparity mat" << std::endl;
         mFrameReadyFlag = true;
         mFrameReadyCond.notify_one();
     }
@@ -44,7 +44,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mLeftMat);
 
-//        std::cout << "update left mat" << std::endl;
+        std::cout << "update left mat" << std::endl;
         mFrameReadyFlag = true;
         mFrameReadyCond.notify_one();
     }
@@ -54,7 +54,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mRightMat);
 
-//        std::cout << "update right mat" << std::endl;
+        std::cout << "update right mat" << std::endl;
         mFrameReadyFlag = true;
         mFrameReadyCond.notify_one();
     }
