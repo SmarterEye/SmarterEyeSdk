@@ -6,10 +6,9 @@
 #define ZKHY_STEREO_D_STEREO_PUBLISHER_D_H
 
 #include <ros/ros.h>
-#include "std_msgs/String.h"
 #include "image_transport/image_transport.h"
-#include "cv_bridge/cv_bridge.h"
-#include "sensor_msgs/image_encodings.h"
+#include "zkhy_stereo_d/CameraParams.h"
+#include "zkhy_stereo_d/RotationMatrix.h"
 
 class StereoCamera;
 class FrameMonitor;
@@ -20,7 +19,13 @@ public:
     StereoPublisher();
     ~StereoPublisher();
 
-    void foo();
+    bool onCameraParamsRequest(zkhy_stereo_d::CameraParams::Request &req,
+                               zkhy_stereo_d::CameraParams::Response &resp);
+
+    bool onRotationMatrixRequest(zkhy_stereo_d::RotationMatrix::Request &req,
+                               zkhy_stereo_d::RotationMatrix::Response &resp);
+
+    void publishFrames();
 
 private:
     ros::NodeHandle node_handler_;
@@ -29,7 +34,10 @@ private:
     image_transport::Publisher left_color_pub_;
     image_transport::Publisher right_gray_pub_;
     image_transport::Publisher right_color_pub_;
-    image_transport::Publisher disparity_pub;
+    image_transport::Publisher disparity_pub_;
+
+    ros::ServiceServer camera_params_server_;
+    ros::ServiceServer rotation_matrix_server_;
 
     std::unique_ptr<StereoCamera> stereo_camera_;
     std::unique_ptr<FrameMonitor> frame_monitor_;

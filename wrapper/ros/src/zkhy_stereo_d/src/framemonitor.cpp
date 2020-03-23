@@ -15,9 +15,9 @@ FrameMonitor::FrameMonitor()
       mRgbBuffer(new unsigned char[1280 * 720 * 3])
 {
     // support gray or rgb
-    mLeftMat.create(720/2, 1280/2, CV_8UC3);
-    mRightMat.create(720/2, 1280/2, CV_8UC3);
-    mDisparityMat.create(720/2, 1280/2, CV_8UC3);
+    mLeftMat.create(720, 1280, CV_8UC3);
+    mRightMat.create(720, 1280, CV_8UC3);
+    mDisparityMat.create(720, 1280, CV_8UC3);
 }
 
 void FrameMonitor::handleRawFrame(const RawImageFrame *rawFrame)
@@ -65,7 +65,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
 void FrameMonitor::waitForFrames()
 {
     std::unique_lock<std::mutex> lock(mMutex);
-    mFrameReadyCond.wait_for(lock, std::chrono::milliseconds(240), [this]{
+    mFrameReadyCond.wait(lock, [this]{
         return mFrameReadyFlag;
     });
 
@@ -111,7 +111,7 @@ void FrameMonitor::loadFrameData2Mat(const RawImageFrame *frameData, cv::Mat &ds
         YuvToRGB::YCbYCr2Rgb(imageData, (char *)mRgbBuffer.get(), width, height);
         cv::Mat yuv422Mat(height, width, CV_8UC3, mRgbBuffer.get());
         cv::resize(yuv422Mat, dstMat, dstMat.size());
-        cv::cvtColor(dstMat, dstMat, CV_RGB2BGR);
+//        cv::cvtColor(dstMat, dstMat, CV_RGB2BGR);
     }
         break;
     case FrameFormat::YUV422Plannar:
@@ -119,7 +119,7 @@ void FrameMonitor::loadFrameData2Mat(const RawImageFrame *frameData, cv::Mat &ds
         YuvToRGB::YCbYCrPlannar2Rgb(imageData, (char *)mRgbBuffer.get(), width, height);
         cv::Mat yuv422PlannarMat(height, width, CV_8UC3, mRgbBuffer.get());
         cv::resize(yuv422PlannarMat, dstMat, dstMat.size());
-        cv::cvtColor(dstMat, dstMat, CV_RGB2BGR);
+//        cv::cvtColor(dstMat, dstMat, CV_RGB2BGR);
     }
         break;
     }
