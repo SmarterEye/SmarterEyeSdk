@@ -2,8 +2,8 @@
 // Created by xtp on 2020/3/9.
 //
 
-#ifndef ZKHY_STEREO_D_STEREO_PUBLISHER_D_H
-#define ZKHY_STEREO_D_STEREO_PUBLISHER_D_H
+#ifndef ZKHY_STEREO_D_STEREO_PUBLISHER_H
+#define ZKHY_STEREO_D_STEREO_PUBLISHER_H
 
 #include <ros/ros.h>
 #include "image_transport/image_transport.h"
@@ -44,4 +44,4 @@ private:
 };
 
 
-#endif //ZKHY_STEREO_D_STEREO_PUBLISHER_D_H
+#endif //ZKHY_STEREO_D_STEREO_PUBLISHER_H

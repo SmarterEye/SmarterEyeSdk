@@ -212,17 +212,17 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(stereo_listener_d src/stereo_listener_d.cpp)
-target_link_libraries(stereo_listener_d
+add_executable(stereo_listener src/stereo_listener.cpp)
+target_link_libraries(stereo_listener
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
         )
 
-add_executable(stereo_publisher_d
-        src/stereo_publisher_d.cpp
+add_executable(stereo_publisher
+        src/stereo_publisher.cpp
         src/framemonitor.cpp
         )
-target_link_libraries(stereo_publisher_d
+target_link_libraries(stereo_publisher
         ${catkin_LIBRARIES}
         smarter_eye_sdk
         )

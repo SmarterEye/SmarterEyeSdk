@@ -2,7 +2,7 @@
 // Created by xtp on 2020/3/9.
 //
 
-#include "stereo_publisher_d.h"
+#include "stereo_publisher.h"
 
 #include "framemonitor.h"
 #include "smarter_eye_sdk/stereocamera.h"
