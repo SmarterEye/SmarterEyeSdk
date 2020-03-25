@@ -74,7 +74,11 @@ set(SDK_CMAKE_RPATH
     )
 
 # build shared
-qt5_wrap_cpp(MOC_SRC ${SDK_SRCS} ${SDK_INCS})
+
+if(UNIX)
+    qt5_wrap_cpp(MOC_SRC ${SDK_SRCS} ${SDK_INCS})
+endif()
+
 add_library(${SDK_NAME} SHARED ${SDK_SRCS} ${SDK_INCS} ${MOC_SRC})
 add_dependencies(${SDK_NAME} QAsioSocket)
 target_link_libraries(${SDK_NAME}
@@ -126,10 +130,12 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
     )
 
-export(
-    EXPORT ${SDK_NAME}-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
-    )
+if(UNIX)
+    export(
+        EXPORT ${SDK_NAME}-targets
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
+        )
+endif()
 
 configure_package_config_file(${SDK_NAME}-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake

@@ -2,7 +2,7 @@ add_definitions(-std=c++11)
 
 message("Current folder is: ${CMAKE_CURRENT_SOURCE_DIR}")
 
-find_package(smarter_eye_sdk REQUIRED)
+find_package(smarter_eye_sdk)
 
 if(smarter_eye_sdk_FOUND)
 

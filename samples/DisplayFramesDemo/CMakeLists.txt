@@ -14,9 +14,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_DIR})
 
 if (WIN32)
-    link_libraries(opencv_core341 opencv_imgproc341 opencv_highgui341)
+    link_libraries(${OpenCV_LIBS})
 else()
-    link_libraries(opencv_core opencv_imgproc opencv_highgui opencv_imgcodecs pthread)
+    llink_libraries(${OpenCV_LIBS} pthread)
 endif()
 
 add_executable(DisplayFramesDemo

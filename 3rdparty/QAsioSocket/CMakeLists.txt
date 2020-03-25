@@ -36,7 +36,9 @@ set (SRC_LIST
         src/qsocketconnection.cpp
         )
 
-qt5_wrap_cpp(MOC_SRC ${HEADER_LIST} ${SRC_LIST})
+if(UNIX)
+    qt5_wrap_cpp(MOC_SRC ${HEADER_LIST} ${SRC_LIST})
+endif()
 
 add_library(QAsioSocket SHARED ${HEADER_LIST} ${SRC_LIST} ${MOC_SRC})
 target_link_libraries(QAsioSocket Qt5::Core)
