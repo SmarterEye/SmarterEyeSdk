@@ -13,6 +13,6 @@ if (PCL_INCLUDE_DIRS AND PCL_LIBRARIES)
 
     message(STATUS "PCL library status:")
     message(STATUS "version: ${PCL_VERSION}")
-    message(STATUS "libraries: ${PCL_LIBRARIES}")
-    message(STATUS "include path: ${PCL_INCLUDE_DIRS}")
+    # message(STATUS "libraries: ${PCL_LIBRARIES}")
+    # message(STATUS "include path: ${PCL_INCLUDE_DIRS}")
 endif()

@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+set(smarter_eye_sdk_INCLUDE_DIRS "@SDK_CMAKE_INCLUDE_DIR@")
+set(smarter_eye_sdk_LIBRARY_DIRS "@SDK_CMAKE_LIBDIR@")
+set(smarter_eye_sdk_LIBRARIES smarter_eye_sdk)
+
+include("${CMAKE_CURRENT_LIST_DIR}/smarter_eye_sdk-targets.cmake")

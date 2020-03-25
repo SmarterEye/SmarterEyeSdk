@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(smarter_eye_sdk LANGUAGES C CXX)
 set(SDK_VERSION 0.2.25)
+add_definitions(-std=c++11)
 
 include(cmake/common.cmake)
 
@@ -14,7 +15,6 @@ set(SDK_ROOT "${PROJECT_SOURCE_DIR}")
 
 LIST(APPEND CMAKE_MODULE_PATH ${SDK_ROOT}/cmake)
 
-#include(cmake/find_opencv.cmake)
 include(cmake/find_qt.cmake)
 
 include_directories(${SDK_ROOT}/include/${SDK_NAME})
@@ -77,7 +77,10 @@ set(SDK_CMAKE_RPATH
 qt5_wrap_cpp(MOC_SRC ${SDK_SRCS} ${SDK_INCS})
 add_library(${SDK_NAME} SHARED ${SDK_SRCS} ${SDK_INCS} ${MOC_SRC})
 add_dependencies(${SDK_NAME} QAsioSocket)
-target_link_libraries(${SDK_NAME} QAsioSocket Qt5::Core Qt5::Network)
+target_link_libraries(${SDK_NAME}
+    PRIVATE $<BUILD_INTERFACE:QAsioSocket>
+    Qt5::Core Qt5::Network
+    )
 set_target_properties(${SDK_NAME} PROPERTIES
     VERSION ${SDK_VERSION}
     INSTALL_RPATH "${SDK_CMAKE_RPATH}"
@@ -87,8 +90,10 @@ set_target_properties(${SDK_NAME} PROPERTIES
 set(SDK_CMAKE_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/${SDK_NAME}")
 set(SDK_CMAKE_BINDIR "${CMAKE_INSTALL_PREFIX}/bin")
 set(SDK_CMAKE_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(SDK_CMAKE_INSTALLDIR "${SDK_CMAKE_LIBDIR}/cmake/${SDK_NAME}")
 
 install(TARGETS ${SDK_NAME}
+    EXPORT ${SDK_NAME}-targets
     ARCHIVE DESTINATION ${SDK_CMAKE_LIBDIR}
     LIBRARY DESTINATION ${SDK_CMAKE_LIBDIR}
     RUNTIME DESTINATION ${SDK_CMAKE_BINDIR}
@@ -112,3 +117,28 @@ install(DIRECTORY
     DESTINATION ${CMAKE_INSTALL_PREFIX}
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
     )
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    ${SDK_NAME}-version.cmake
+    VERSION ${SDK_VERSION}
+    COMPATIBILITY SameMajorVersion
+    )
+
+export(
+    EXPORT ${SDK_NAME}-targets
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
+    )
+
+configure_package_config_file(${SDK_NAME}-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake
+  INSTALL_DESTINATION ${SDK_CMAKE_INSTALLDIR}
+)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-version.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
+  DESTINATION ${SDK_CMAKE_INSTALLDIR}
+)
