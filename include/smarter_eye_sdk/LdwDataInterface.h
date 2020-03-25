@@ -43,22 +43,22 @@ enum LdwWarningGrade
     LDW_WARNING_HIGHT,
 };
 
-typedef struct LdwLaneBoundary__
+struct LdwLaneBoundary
 {
     int degree;
     float coefficient[4];
-}LdwLaneBoundary;
+};
 
-typedef struct LdwLane__
+struct LdwLane
 {
     int width;
     int qualityGrade;
     LdwLaneStyle style;
     LdwLaneBoundary left_Boundary;
     LdwLaneBoundary rightBoundary;
-}LdwLane;
+};
 
-typedef struct LdwRoadway__
+struct LdwRoadway
 {
     int width[3];
     bool isTracking;
@@ -66,9 +66,9 @@ typedef struct LdwRoadway__
     LdwLane rightLane;
     LdwLane adjacentLeft_Lane;
     LdwLane adjacentRightLane;
-}LdwRoadway;
+};
 
-typedef struct LdwLensInfo__
+struct LdwLensInfo
 {
     float xImageFocal;
     float yImageFocal;
@@ -79,15 +79,15 @@ typedef struct LdwLensInfo__
     float mSinRx;
     float mCosRy;
     float mSinRy;
-}LdwLensInfo;
+};
 
-typedef struct LdwDataPack__
+struct LdwDataPack
 {
     LdwRoadway roadway;
     LdwSoftStatus softStatus;
     LdwSteerStatus steerStatus;
     LdwLensInfo lens;
-}LdwDataPack;
+};
 
 
 #endif // LDW_DATA_INTERFACE_H_

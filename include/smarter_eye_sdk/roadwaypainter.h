@@ -9,7 +9,6 @@
 class SmartRgbImage
 {
 public:
-    SmartRgbImage();
     SmartRgbImage(unsigned char *imgData, int _width, int _height);
     ~SmartRgbImage();
 
@@ -19,6 +18,9 @@ public:
 
     unsigned char *mData;
 };
+
+struct LdwLane;
+struct LdwDataPack;
 
 class SMARTPAINTER_SHARED_EXPORT RoadwayPainter
 {
@@ -31,13 +33,34 @@ public:
 protected:
     static void outputParamFromMToMm(void *_roadwayParam);
     static void getBeginAndEndImageIndex(int &_bH, int &_eH, int _arrayIndex[], int closeH);
-    static bool paintLane(SmartRgbImage &_img, int _bH, int _eH, int _lEdge[], int _rEdge[], int _alpha, int _color[], bool maskMode = false);
+    static bool paintLaneBoundary(SmartRgbImage &_img, int _bH, int _eH,
+        int _lEdge[], int _rEdge[], int _alpha, int _color[], bool maskMode = false);
     static bool calculateImageIndex(void *_lens, float _worldX, float _worldY, float & _imageX, float & _imageY);
     static void getImageCurveIndex(void *_lens, void *_boundary, float _worldY, float & _imageX, float & _imageY);
     static void calculateCurveIndex(void *_lens, void *_boundary, SmartRgbImage &_image, float _by, float _ey, int _boundaryIndex[]);
     static void doCurveInterpolation(int _bH, int _eH, int _curveEquation[]);
     static void getLineEquation(float _x1, float _y1, float _x2, float _y2, float &_k, float &_b);
     static void drawLine(SmartRgbImage &_img, int _bh, int _eh, float _k, float _b,int _color[]);
+
+    static void getImagePointFormWorldCoordinate(LdwDataPack & _dataPack,
+        float _world_x, float _word_y, float & _img_x, float & _img_y);
+
+    static void getConstParams(LdwDataPack & _dataPack, float & _alpha, float & _gamma);
+
+    static float getEquationValue(int _degree, float _coefficient[], float _variate);
+    static float getEquationSlope(int _degree, float _coefficient[], float _variate);
+
+    static void getLaneMarkBoundary(LdwDataPack & _dataPack, float _far_distance,
+        int _img_height, int _degree, float _coefficient[], int *_boundary);
+
+    static float getFarDistance(LdwDataPack & _dataPack);
+
+    static void paintLane(LdwDataPack & _dataPack, LdwLane & _lane,
+        SmartRgbImage & _smart_image, float _far_distance, int _color[],
+        bool _mask_mode);
+
+    static void drawWhenManualLearnMode(LdwDataPack &_dataPack,
+        SmartRgbImage &_smartImage, int _color[]);
 };
 
 #endif // ROADWAYPAINTER_H

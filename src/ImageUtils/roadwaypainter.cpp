@@ -5,8 +5,6 @@
 #include "roadwaypainter.h"
 #include "LdwDataInterface.h"
 
-
-
 static unsigned char g_yetColor[] = {
     131,0,0,135,0,0,139,0,0,143,0,0,147,0,0,151,0,0,155,0,0,159,0,0,163,0,0,167,0,0,171,
     0,0,175,0,0,179,0,0,183,0,0,187,0,0,191,0,0,195,0,0,199,0,0,203,0,0,207,0,0,211,0,0,
@@ -63,21 +61,17 @@ static unsigned char g_yetColorInMaskMode[] = {
     64,240,125,64,240,125,0,240,125,0,240,125,0,240,125,0,224,125,0,224,125,0,208,125,0,208,125,0,192,125,
     0,192,125,0,176,125,0,176,125,0,160,125,0,160,125,0,144,125,0,144,125,0,128,125,0,128,125,0,112,125,
     0,112,125,0,96,125,0,96,125,0,80,125,0,80,125,0,64,125,0,64,125,0,48,125,0,48,125,0,32,125,
-    0,32,125,0,16,125,0,16,125,0,0,125,0,0,125,0,0,125};
+    0,32,125,0,16,125,0,16,125,0,0,125,0,0,125,0,0,125 };
 
-static unsigned char g_greenColor[] = {0, 255, 0};
-static unsigned char g_redColor[] = {255, 0, 0};
-static unsigned char g_yellowColor[] = {255, 255, 0};
-static unsigned char g_blueColor[] = {0, 170, 255};
+static unsigned char g_greenColor[] = { 0, 255, 0 };
+static unsigned char g_redColor[] = { 255, 0, 0 };
+static unsigned char g_yellowColor[] = { 255, 255, 0 };
+static unsigned char g_blueColor[] = { 0, 170, 255 };
 
-static unsigned char g_greenColorInMaskMode[] = {124, 7, 192};
-static unsigned char g_redColorInMaskMode[] = {125, 240, 0};
-static unsigned char g_yellowColorInMaskMode[] = {125, 247, 192};
-static unsigned char g_blueColorInMaskMode[] = {124, 7, 255};
-
-SmartRgbImage::SmartRgbImage()
-{
-}
+static unsigned char g_greenColorInMaskMode[] = { 124, 7, 192 };
+static unsigned char g_redColorInMaskMode[] = { 125, 240, 0 };
+static unsigned char g_yellowColorInMaskMode[] = { 125, 247, 192 };
+static unsigned char g_blueColorInMaskMode[] = { 124, 7, 255 };
 
 SmartRgbImage::SmartRgbImage(unsigned char *imgData, int _width, int _height)
 {
@@ -93,7 +87,8 @@ SmartRgbImage::~SmartRgbImage()
 
 #define ROADWAY_COLOR_NUM 10
 
-bool RoadwayPainter::paintRoadway(void *_roadwayParam, unsigned char * _rgbImageData, int _width_, int _height, bool maskMode)
+bool RoadwayPainter::paintRoadway(void *_roadwayParam,
+    unsigned char * _rgbImageData, int _width_, int _height, bool maskMode)
 {
     LdwDataPack *dataPack = (LdwDataPack *)_roadwayParam;
 
@@ -101,43 +96,24 @@ bool RoadwayPainter::paintRoadway(void *_roadwayParam, unsigned char * _rgbImage
 
     SmartRgbImage smartImage(_rgbImageData, _width_, _height);
 
-    int bH, eH, by, ey;
-    int colorSegment[ROADWAY_COLOR_NUM + 1];
-    float imageX, imageY;
-    int color[3], lColor[3], rColor[3], adjacentLeft_Color[3], adjacentRightColor[3];
-    unsigned char *yetColor;
-    unsigned char *greenColor;
-    unsigned char *redColor;
-    unsigned char *yellowColor;
-    unsigned char *blueColor;
-    if(maskMode){
+    int color[3], lColor[3], rColor[3], adjacent_color[3];
+
+    unsigned char *yetColor, *greenColor, *redColor, *yellowColor, *blueColor;
+
+    if (maskMode) {
         yetColor = g_yetColorInMaskMode;
         greenColor = g_greenColorInMaskMode;
         redColor = g_redColorInMaskMode;
         yellowColor = g_yellowColorInMaskMode;
         blueColor = g_blueColorInMaskMode;
-    }else{
+    }
+    else {
         yetColor = g_yetColor;
         greenColor = g_greenColor;
         redColor = g_redColor;
         yellowColor = g_yellowColor;
         blueColor = g_blueColor;
     }
-
-    float currentMeter;
-    const float meter50 = 50000.0f;
-    const float meter5 = 5000.0f;
-    const float meter1 = 1000.0f;
-
-    static int *left_Left_ = new int[smartImage.mHeight];
-    static int *left_Right = new int[smartImage.mHeight];
-    static int *rightLeft_ = new int[smartImage.mHeight];
-    static int *rightRight = new int[smartImage.mHeight];
-
-    static int *adjacentLeft_Left_ = new int[smartImage.mHeight];
-    static int *adjacentLeft_Right = new int[smartImage.mHeight];
-    static int *adjacentRightLeft_ = new int[smartImage.mHeight];
-    static int *adjacentRightRight = new int[smartImage.mHeight];
 
     if (!dataPack->roadway.isTracking) return false;
 
@@ -151,294 +127,69 @@ bool RoadwayPainter::paintRoadway(void *_roadwayParam, unsigned char * _rgbImage
         color[1] = greenColor[1];
         color[2] = greenColor[2];
 
-        float k1, k2, b1, b2;
-        int bh;
-
-        b1 = dataPack->roadway.left_Lane.left_Boundary.coefficient[0];
-        k1 = dataPack->roadway.left_Lane.left_Boundary.coefficient[1];
-
-        b2 = dataPack->roadway.rightLane.left_Boundary.coefficient[0];
-        k2 = dataPack->roadway.rightLane.left_Boundary.coefficient[1];
-
-        if (std::abs(k1 - k2) < FLT_MIN) bh = (int)(3 * smartImage.mHeight / 4);
-        else bh = (int)((b2 - b1) / (k1 - k2));
-
-        drawLine(smartImage, bh, smartImage.mHeight,
-            dataPack->roadway.left_Lane.left_Boundary.coefficient[1],
-            dataPack->roadway.left_Lane.left_Boundary.coefficient[0],
-            color);
-        drawLine(smartImage, bh, smartImage.mHeight,
-            dataPack->roadway.left_Lane.rightBoundary.coefficient[1],
-            dataPack->roadway.left_Lane.rightBoundary.coefficient[0],
-            color);
-
-        drawLine(smartImage, bh, smartImage.mHeight,
-            dataPack->roadway.rightLane.left_Boundary.coefficient[1],
-            dataPack->roadway.rightLane.left_Boundary.coefficient[0],
-            color);
-
-        drawLine(smartImage, bh, smartImage.mHeight,
-            dataPack->roadway.rightLane.rightBoundary.coefficient[1],
-            dataPack->roadway.rightLane.rightBoundary.coefficient[0],
-            color);
+        drawWhenManualLearnMode(*dataPack, smartImage, color);
 
         return true;
     }
 
-    memset(left_Left_, -1, _height * sizeof(int));
-    memset(left_Right, -1, _height * sizeof(int));
-    memset(rightLeft_, -1, _height * sizeof(int));
-    memset(rightRight, -1, _height * sizeof(int));
-
-    memset(adjacentLeft_Left_, -1, _height * sizeof(int));
-    memset(adjacentLeft_Right, -1, _height * sizeof(int));
-    memset(adjacentRightLeft_, -1, _height * sizeof(int));
-    memset(adjacentRightRight, -1, _height * sizeof(int));
-
-    currentMeter = meter50;
-    for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-    {
-        currentMeter -= meter5;
-
-        calculateImageIndex(&(dataPack->lens), 0, currentMeter, imageX, imageY);
-
-        colorSegment[i] = (int)(imageY + 0.5);
-    }
-
-    colorSegment[ROADWAY_COLOR_NUM] = colorSegment[ROADWAY_COLOR_NUM - 1];
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.left_Lane.left_Boundary),
-        smartImage, meter1, meter50, left_Left_);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.left_Lane.rightBoundary),
-        smartImage, meter1, meter50, left_Right);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.rightLane.left_Boundary),
-        smartImage, meter1, meter50, rightLeft_);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.rightLane.rightBoundary),
-        smartImage, meter1, meter50, rightRight);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.adjacentLeft_Lane.left_Boundary),
-        smartImage, meter1, meter50, adjacentLeft_Left_);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.adjacentLeft_Lane.rightBoundary),
-        smartImage, meter1, meter50, adjacentLeft_Right);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.adjacentRightLane.left_Boundary),
-        smartImage, meter1, meter50, adjacentRightLeft_);
-
-    calculateCurveIndex(&(dataPack->lens),
-        &(dataPack->roadway.adjacentRightLane.rightBoundary),
-        smartImage, meter1, meter50, adjacentRightRight);;
-
-    bH = 0;
-    eH = smartImage.mHeight - 1;
-
-    getBeginAndEndImageIndex(bH, eH, left_Left_, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, left_Right, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, rightLeft_, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, rightRight, smartImage.mHeight);
-
-    getBeginAndEndImageIndex(bH, eH, adjacentLeft_Left_, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, adjacentLeft_Right, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, adjacentRightLeft_, smartImage.mHeight);
-    getBeginAndEndImageIndex(bH, eH, adjacentRightRight, smartImage.mHeight);
-
-    if (eH - bH < 10) return false;
-    else bH -= 1;
-
-    doCurveInterpolation(bH, eH, left_Left_);
-    doCurveInterpolation(bH, eH, left_Right);
-    doCurveInterpolation(bH, eH, rightLeft_);
-    doCurveInterpolation(bH, eH, rightRight);
-
-    doCurveInterpolation(bH, eH, adjacentLeft_Left_);
-    doCurveInterpolation(bH, eH, adjacentLeft_Right);
-    doCurveInterpolation(bH, eH, adjacentRightLeft_);
-    doCurveInterpolation(bH, eH, adjacentRightRight);
-
     if (LDW_NORMAL_STEER == dataPack->steerStatus)
     {
-        lColor[0] = blueColor[0];
-        lColor[1] = blueColor[1];
-        lColor[2] = blueColor[2];
-        rColor[0] = blueColor[0];
-        rColor[1] = blueColor[1];
-        rColor[2] = blueColor[2];
+        lColor[0] = blueColor[0]; lColor[1] = blueColor[1]; lColor[2] = blueColor[2];
+        rColor[0] = blueColor[0]; rColor[1] = blueColor[1]; rColor[2] = blueColor[2];
     }
-    else if(LDW_STEER_WARNING_LEFT_ == dataPack->steerStatus)
+    else if (LDW_STEER_WARNING_LEFT_ == dataPack->steerStatus)
     {
-        lColor[0] = redColor[0];
-        lColor[1] = redColor[1];
-        lColor[2] = redColor[2];
-        rColor[0] = blueColor[0];
-        rColor[1] = blueColor[1];
-        rColor[2] = blueColor[2];
+        lColor[0] = redColor[0]; lColor[1] = redColor[1]; lColor[2] = redColor[2];
+        rColor[0] = blueColor[0]; rColor[1] = blueColor[1]; rColor[2] = blueColor[2];
     }
     else if (LDW_STEER_WARNING_RIGHT == dataPack->steerStatus)
     {
-        lColor[0] = blueColor[0];
-        lColor[1] = blueColor[1];
-        lColor[2] = blueColor[2];
-        rColor[0] = redColor[0];
-        rColor[1] = redColor[1];
-        rColor[2] = redColor[2];
+        lColor[0] = blueColor[0]; lColor[1] = blueColor[1]; lColor[2] = blueColor[2];
+        rColor[0] = redColor[0]; rColor[1] = redColor[1]; rColor[2] = redColor[2];
     }
     else if (LDW_STEER_ON_LEFT__LANE == dataPack->steerStatus)
     {
-        lColor[0] = yellowColor[0];
-        lColor[1] = yellowColor[1];
-        lColor[2] = yellowColor[2];
-        rColor[0] = blueColor[0];
-        rColor[1] = blueColor[1];
-        rColor[2] = blueColor[2];
+        lColor[0] = yellowColor[0]; lColor[1] = yellowColor[1]; lColor[2] = yellowColor[2];
+        rColor[0] = blueColor[0]; rColor[1] = blueColor[1]; rColor[2] = blueColor[2];
     }
     else if (LDW_STEER_ON_RIGHT_LANE == dataPack->steerStatus)
     {
-        lColor[0] = blueColor[0];
-        lColor[1] = blueColor[1];
-        lColor[2] = blueColor[2];
-        rColor[0] = yellowColor[0];
-        rColor[1] = yellowColor[1];
-        rColor[2] = yellowColor[2];
+        lColor[0] = blueColor[0]; lColor[1] = blueColor[1]; lColor[2] = blueColor[2];
+        rColor[0] = yellowColor[0]; rColor[1] = yellowColor[1]; rColor[2] = yellowColor[2];
     }
 
-    adjacentLeft_Color[0] = blueColor[0]; adjacentLeft_Color[1] = blueColor[1]; adjacentLeft_Color[2] = blueColor[2];
-    adjacentRightColor[0] = blueColor[0]; adjacentRightColor[1] = blueColor[1]; adjacentRightColor[2] = blueColor[2];
+    adjacent_color[0] = blueColor[0];
+    adjacent_color[1] = blueColor[1];
+    adjacent_color[2] = blueColor[2];
 
-    if (dataPack->roadway.left_Lane.style == LDW_LANE_STYLE_BROKEN_LANE ||
-        dataPack->roadway.left_Lane.style == LDW_LANE_STYLE_DOUBLE_BROKEN_LANE)
+    float far_distance = getFarDistance(*dataPack);
+
+    if (LDW_LANE_STYLE_NONE_LANE != dataPack->roadway.left_Lane.style &&
+        LDW_LANE_STYLE_PREDICT_LANE != dataPack->roadway.left_Lane.style)
     {
-        for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-        {
-            by = colorSegment[i];
-            ey = colorSegment[i + 1];
-
-            if (0 == i % 2) continue;
-
-            if (ey - by < 0) continue;
-
-            by = std::max(bH, by);
-            ey = std::min(eH, ey);
-
-            if (ey - by < 0) continue;
-
-            paintLane(smartImage, by, ey, left_Left_, left_Right, 80, lColor, maskMode);
-        }
-    }
-    else if (dataPack->roadway.left_Lane.style == LDW_LANE_STYLE_SOLID_LANE ||
-        dataPack->roadway.left_Lane.style == LDW_LANE_STYLE_DOUBLE_SOLID_LANE ||
-        dataPack->roadway.left_Lane.style == LDW_LANE_STYLE_TRIPLE_LANE)
-    {
-        paintLane(smartImage, bH, eH, left_Left_, left_Right, 80, lColor, maskMode);
+        paintLane(*dataPack, dataPack->roadway.left_Lane,
+            smartImage, far_distance, lColor, maskMode);
     }
 
-    if (dataPack->roadway.rightLane.style == LDW_LANE_STYLE_BROKEN_LANE ||
-        dataPack->roadway.rightLane.style == LDW_LANE_STYLE_DOUBLE_BROKEN_LANE)
+    if (LDW_LANE_STYLE_NONE_LANE != dataPack->roadway.rightLane.style &&
+        LDW_LANE_STYLE_PREDICT_LANE != dataPack->roadway.rightLane.style)
     {
-        for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-        {
-            by = colorSegment[i];
-            ey = colorSegment[i + 1];
-
-            if (0 == i % 2) continue;
-
-            if (ey - by < 0) continue;
-
-            by = std::max(bH, by);
-            ey = std::min(eH, ey);
-
-            if (ey - by < 0) continue;
-
-            paintLane(smartImage, by, ey, rightLeft_, rightRight, 80, rColor, maskMode);
-        }
-    }
-    else if(dataPack->roadway.rightLane.style == LDW_LANE_STYLE_SOLID_LANE ||
-        dataPack->roadway.rightLane.style == LDW_LANE_STYLE_DOUBLE_SOLID_LANE ||
-        dataPack->roadway.rightLane.style == LDW_LANE_STYLE_TRIPLE_LANE)
-    {
-        paintLane(smartImage, bH, eH, rightLeft_, rightRight, 80, rColor, maskMode);
+        paintLane(*dataPack, dataPack->roadway.rightLane,
+            smartImage, far_distance, rColor, maskMode);
     }
 
-    if (dataPack->roadway.adjacentLeft_Lane.style == LDW_LANE_STYLE_BROKEN_LANE ||
-        dataPack->roadway.adjacentLeft_Lane.style == LDW_LANE_STYLE_DOUBLE_BROKEN_LANE)
+    if (LDW_LANE_STYLE_NONE_LANE != dataPack->roadway.adjacentLeft_Lane.style &&
+        LDW_LANE_STYLE_PREDICT_LANE != dataPack->roadway.adjacentLeft_Lane.style)
     {
-        for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-        {
-            by = colorSegment[i];
-            ey = colorSegment[i + 1];
-
-            if (0 == i % 2) continue;
-
-            if (ey - by < 0) continue;
-
-            by = std::max(bH, by);
-            ey = std::min(eH, ey);
-
-            if (ey - by < 0) continue;
-
-            paintLane(smartImage, by, ey, adjacentLeft_Left_, adjacentLeft_Right, 80, adjacentLeft_Color, maskMode);
-        }
+        paintLane(*dataPack, dataPack->roadway.adjacentLeft_Lane,
+            smartImage, far_distance, adjacent_color, maskMode);
     }
-    else if (dataPack->roadway.adjacentLeft_Lane.style == LDW_LANE_STYLE_SOLID_LANE ||
-        dataPack->roadway.adjacentLeft_Lane.style == LDW_LANE_STYLE_DOUBLE_SOLID_LANE ||
-        dataPack->roadway.adjacentLeft_Lane.style == LDW_LANE_STYLE_TRIPLE_LANE)
+   
+    if (LDW_LANE_STYLE_NONE_LANE != dataPack->roadway.adjacentRightLane.style &&
+        LDW_LANE_STYLE_PREDICT_LANE != dataPack->roadway.adjacentRightLane.style)
     {
-        paintLane(smartImage, bH, eH, adjacentLeft_Left_, adjacentLeft_Right, 80, adjacentLeft_Color, maskMode);
-    }
-
-    if (dataPack->roadway.adjacentRightLane.style == LDW_LANE_STYLE_BROKEN_LANE ||
-        dataPack->roadway.adjacentRightLane.style == LDW_LANE_STYLE_DOUBLE_BROKEN_LANE)
-    {
-        for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-        {
-            by = colorSegment[i];
-            ey = colorSegment[i + 1];
-
-            if (0 == i % 2) continue;
-
-            if (ey - by < 0) continue;
-
-            by = std::max(bH, by);
-            ey = std::min(eH, ey);
-
-            if (ey - by < 0) continue;
-
-            paintLane(smartImage, by, ey, adjacentRightLeft_, adjacentRightRight, 80, adjacentRightColor, maskMode);
-        }
-    }
-    else if (dataPack->roadway.adjacentRightLane.style == LDW_LANE_STYLE_SOLID_LANE ||
-        dataPack->roadway.adjacentRightLane.style == LDW_LANE_STYLE_DOUBLE_SOLID_LANE ||
-        dataPack->roadway.adjacentRightLane.style == LDW_LANE_STYLE_TRIPLE_LANE)
-    {
-        paintLane(smartImage, bH, eH, adjacentRightLeft_, adjacentRightRight, 80, adjacentRightColor, maskMode);
-    }
-
-    for (int i = 0; i < ROADWAY_COLOR_NUM; i++)
-    {
-        by = colorSegment[i];
-        ey = colorSegment[i + 1];
-
-        if (ey - by < 0) continue;
-
-        by = std::max(bH, by);
-        ey = std::min(eH, ey);
-
-        if (ey - by < 0) continue;
-
-        color[0] = yetColor[(25 + i * 25) * 3 + 2];
-        color[1] = yetColor[(25 + i * 25) * 3 + 1];
-        color[2] = yetColor[(25 + i * 25) * 3 + 0];
-
-//        paintLane(smartImage, by, ey, left_Right, rightLeft_, 50, color, maskMode);
+        paintLane(*dataPack, dataPack->roadway.adjacentRightLane,
+            smartImage, far_distance, adjacent_color, maskMode);
     }
 
     return true;
@@ -512,7 +263,7 @@ void RoadwayPainter::getBeginAndEndImageIndex(int &_bH, int &_eH, int _arrayInde
     }
 }
 
-bool RoadwayPainter::paintLane(SmartRgbImage &_img, int _bH, int _eH, int _lEdge[], int _rEdge[], int _alpha, int _color[], bool maskMode)
+bool RoadwayPainter::paintLaneBoundary(SmartRgbImage &_img, int _bH, int _eH, int _lEdge[], int _rEdge[], int _alpha, int _color[], bool maskMode)
 {
     int lx, rx;
     int R, G, B, alpha1;
@@ -531,24 +282,26 @@ bool RoadwayPainter::paintLane(SmartRgbImage &_img, int _bH, int _eH, int _lEdge
         lx = _lEdge[h];
         rx = _rEdge[h];
 
-        if (lx < 0 || rx < 0) continue;
+        if (lx < 0 || rx < 0 || lx >= _img.mWidth || rx >= _img.mWidth)
+            continue;
 
         colData = rowData + (lx - 1) * 3;
 
         for (int w = lx; w < rx; w++)
         {
-            if(maskMode){
+            if (maskMode) {
                 B = _color[0];
                 G = _color[1];
                 R = _color[2];
-            }else{
+            }
+            else {
                 B = *(colData + 0);
                 G = *(colData + 1);
                 R = *(colData + 2);
 
-                B = B *alpha1 + _color[0] * _alpha;
-                G = G *alpha1 + _color[1] * _alpha;
-                R = R *alpha1 + _color[2] * _alpha;
+                B = B * alpha1 + _color[0] * _alpha;
+                G = G * alpha1 + _color[1] * _alpha;
+                R = R * alpha1 + _color[2] * _alpha;
 
                 R >>= 7;
                 G >>= 7;
@@ -605,7 +358,7 @@ bool RoadwayPainter::calculateImageIndex(void *_lens, float _worldX, float _worl
 }
 
 void RoadwayPainter::getImageCurveIndex(void *_lens, void *_boundary, float _worldY,
-                                      float & _imageX, float & _imageY)
+    float & _imageX, float & _imageY)
 {
     LdwLensInfo *lens = (LdwLensInfo *)_lens;
     LdwLaneBoundary *boundary = (LdwLaneBoundary *)_boundary;
@@ -625,7 +378,7 @@ void RoadwayPainter::getImageCurveIndex(void *_lens, void *_boundary, float _wor
 }
 
 void RoadwayPainter::calculateCurveIndex(void *_lens, void *_boundary, SmartRgbImage &_image,
-                                       float _by, float _ey, int _boundaryIndex[])
+    float _by, float _ey, int _boundaryIndex[])
 {
     LdwLensInfo *lens = (LdwLensInfo *)_lens;
     LdwLaneBoundary *boundary = (LdwLaneBoundary *)_boundary;
@@ -748,9 +501,9 @@ void RoadwayPainter::drawLine(SmartRgbImage & _img, int _bh, int _eh, float _k, 
 
         int w = (int)(h * _k + _b);
 
-        if(w < 1) continue;
+        if (w < 1) continue;
 
-        if(w >=_img.mWidth) continue;
+        if (w >= _img.mWidth) continue;
 
         w = (w - 1) * 3;
 
@@ -779,3 +532,250 @@ RoadwayPainter::~RoadwayPainter()
 {
 
 }
+
+void RoadwayPainter::getImagePointFormWorldCoordinate(LdwDataPack & _dataPack,
+    float _world_x, float _word_y, float & _img_x, float & _img_y)
+{
+    float x, y, z;
+    float x0, y0, z0;
+
+    x = _world_x;
+    z = _word_y;
+    y = _dataPack.lens.mountingHeight;
+
+    x0 = _dataPack.lens.mCosRy * x + _dataPack.lens.mSinRy * z;
+    y0 = _dataPack.lens.mSinRx * _dataPack.lens.mSinRy * x +
+        _dataPack.lens.mCosRx * y -
+        _dataPack.lens.mCosRy * _dataPack.lens.mSinRx * z;
+    z0 = -_dataPack.lens.mCosRx * _dataPack.lens.mSinRy * x +
+        _dataPack.lens.mSinRx * y +
+        _dataPack.lens.mCosRx * _dataPack.lens.mCosRy * z;
+
+    if (std::abs(z0) < FLT_MIN)
+    {
+        x0 = 0;
+        y0 = 0;
+    }
+    else
+    {
+        x0 = x0 / z0;
+        y0 = y0 / z0;
+    }
+    z0 = 1;
+
+    float u0 = _dataPack.lens.xImageFocal;
+    float v0 = _dataPack.lens.yImageFocal;
+
+    _img_x = x0 * _dataPack.lens.xRatioFocalToPixel + u0;
+    _img_y = y0 * _dataPack.lens.xRatioFocalToPixel + v0;
+}
+
+void RoadwayPainter::getConstParams(LdwDataPack & _dataPack, float & _alpha, float & _gamma)
+{
+    float img_x1, img_y1, img_x2, img_y2;
+    float world_x1, world_y1, world_x2, world_y2;
+
+    world_x1 = 0.0f;
+    world_y1 = 1000.0f; //  1 meter
+
+    getImagePointFormWorldCoordinate(_dataPack, world_x1, world_y1, img_x1, img_y1);
+
+    world_x2 = 0.0f;
+    world_y2 = 10000.0f;  // 10meter
+
+    getImagePointFormWorldCoordinate(_dataPack, world_x2, world_y2, img_x2, img_y2);
+
+    _alpha = (world_y1 * img_y1 - world_y2 * img_y2) / (world_y1 - world_y2);
+    _gamma = (img_y1 - _alpha) * world_y1;
+}
+
+float RoadwayPainter::getEquationValue(int _degree, float _coefficient[], float _variate)
+{
+    float tValue = 1.0f;
+    float rValue = 0.0f;
+
+    for (int n = 0; n <= _degree; n++)
+    {
+        rValue += tValue * _coefficient[n];
+        tValue *= _variate;
+    }
+
+    return rValue;
+}
+
+float RoadwayPainter::getEquationSlope(int _degree, float _coefficient[], float _variate)
+{
+    float tValue = 1.0f;
+    float rValue = 0.0f;
+
+    for (int n = 1; n <= _degree; n++)
+    {
+        rValue += ((float)n) * _coefficient[n] * tValue;
+        tValue *= _variate;
+    }
+
+    return rValue;
+}
+
+void RoadwayPainter::getLaneMarkBoundary(LdwDataPack & _dataPack, float _far_distance,
+    int _img_height, int _degree, float _coefficient[], int *_boundary)
+{
+    int boundary_x, boundary_y;
+    float world_x, world_y, img_x, img_y;
+
+    float alpha, gamma;
+
+    getConstParams(_dataPack, alpha, gamma);
+
+    float maxImageHeight = (float)(_img_height - alpha + 10);
+    float imageHeight, yValue, xValue, kValue;
+
+    imageHeight = maxImageHeight + 1.0f;
+
+    while (true)
+    {
+        imageHeight -= 1.0f;
+        yValue = gamma / imageHeight;
+
+        if (yValue > _far_distance || imageHeight < 0) break;
+
+        xValue = getEquationValue(_degree, _coefficient, yValue);
+        kValue = getEquationSlope(_degree, _coefficient, yValue);
+
+        world_x = xValue;
+        world_y = yValue;
+
+        getImagePointFormWorldCoordinate(_dataPack, world_x, world_y, img_x, img_y);
+
+        boundary_x = (int)(img_x + 0.5f);
+        boundary_y = (int)(img_y + 0.5f) - 1;
+
+        if (boundary_y > _img_height - 1)
+            boundary_y = _img_height - 1;
+
+        _boundary[boundary_y] = boundary_x;
+    }
+}
+
+float RoadwayPainter::getFarDistance(LdwDataPack & _dataPack)
+{
+    const float m_to_mm = 1000.f;
+    const float const_curve_rate = 1 / (2000.f * m_to_mm);
+    float curvature;
+    float max_curve_rate = _dataPack.roadway.left_Lane.rightBoundary.coefficient[2];
+
+    max_curve_rate = std::abs(max_curve_rate);
+    max_curve_rate = std::max(max_curve_rate,
+        std::abs(_dataPack.roadway.rightLane.left_Boundary.coefficient[2]));
+
+    if (max_curve_rate < const_curve_rate)
+        max_curve_rate = const_curve_rate;
+    
+    curvature = 0.5f / max_curve_rate;
+
+    if (curvature >= 500.f * m_to_mm)
+        return 50 * m_to_mm;
+    else if (curvature > 250.f * m_to_mm && curvature < 500.f * m_to_mm)
+        return 40 * m_to_mm; 
+    else
+        return 30 * m_to_mm;
+}
+
+void RoadwayPainter::paintLane(LdwDataPack & _dataPack, LdwLane & _lane,
+    SmartRgbImage & _smart_image, float _far_distance, int _color[],
+    bool _mask_mode)
+{
+    const float meter5 = 5000.f;
+
+    static int *left_boundary = new int[_smart_image.mHeight];
+    static int *right_boundary= new int[_smart_image.mHeight];
+
+    memset(left_boundary, -1, _smart_image.mHeight * sizeof(int));
+    memset(right_boundary, -1, _smart_image.mHeight * sizeof(int));
+
+    int bH, eH, by, ey;
+    float img_x, img_y;
+
+    getLaneMarkBoundary(_dataPack, _far_distance, _smart_image.mHeight,
+        _lane.left_Boundary.degree, _lane.left_Boundary.coefficient, left_boundary);
+
+    getLaneMarkBoundary(_dataPack, _far_distance, _smart_image.mHeight,
+        _lane.rightBoundary.degree, _lane.rightBoundary.coefficient, right_boundary);
+
+    bH = 0;
+    eH = _smart_image.mHeight - 1;
+
+    getBeginAndEndImageIndex(bH, eH, left_boundary, _smart_image.mHeight);
+    getBeginAndEndImageIndex(bH, eH, right_boundary, _smart_image.mHeight);
+
+    doCurveInterpolation(bH, eH, left_boundary);
+    doCurveInterpolation(bH, eH, right_boundary);
+
+    if (LDW_LANE_STYLE_BROKEN_LANE == _lane.style ||
+        LDW_LANE_STYLE_DOUBLE_BROKEN_LANE == _lane.style)
+    {
+        for (float d = meter5; d < _far_distance; d += meter5 * 2)
+        {
+
+            getImagePointFormWorldCoordinate(_dataPack, 0, d, img_x, img_y);
+            ey = (int)(img_y + 0.5f);
+
+            getImagePointFormWorldCoordinate(_dataPack, 0, d + meter5, img_x, img_y);
+            by = (int)(img_y + 0.5f);
+
+            if (ey - by < 0) continue;
+
+            by = std::max(bH, by);
+            ey = std::min(eH, ey);
+
+            if (ey - by < 0) continue;
+
+            paintLaneBoundary(_smart_image, by, ey,
+                left_boundary, right_boundary, 80, _color, _mask_mode);
+        }
+    }
+    else if (LDW_LANE_STYLE_SOLID_LANE == _lane.style ||
+        LDW_LANE_STYLE_DOUBLE_SOLID_LANE == _lane.style ||
+        LDW_LANE_STYLE_TRIPLE_LANE == _lane.style)
+    {
+        paintLaneBoundary(_smart_image, bH, eH,
+            left_boundary, right_boundary, 80, _color, _mask_mode);
+    }
+}
+
+void RoadwayPainter::drawWhenManualLearnMode(LdwDataPack &_dataPack,
+    SmartRgbImage &_smartImage, int _color[])
+{
+    float k1, k2, b1, b2;
+    int bh;
+
+    b1 = _dataPack.roadway.left_Lane.left_Boundary.coefficient[0];
+    k1 = _dataPack.roadway.left_Lane.left_Boundary.coefficient[1];
+
+    b2 = _dataPack.roadway.rightLane.left_Boundary.coefficient[0];
+    k2 = _dataPack.roadway.rightLane.left_Boundary.coefficient[1];
+
+    if (std::abs(k1 - k2) < FLT_MIN) bh = (int)(3 * _smartImage.mHeight / 4);
+    else bh = (int)((b2 - b1) / (k1 - k2));
+
+    drawLine(_smartImage, bh, _smartImage.mHeight,
+        _dataPack.roadway.left_Lane.left_Boundary.coefficient[1],
+        _dataPack.roadway.left_Lane.left_Boundary.coefficient[0],
+        _color);
+
+    drawLine(_smartImage, bh, _smartImage.mHeight,
+        _dataPack.roadway.left_Lane.rightBoundary.coefficient[1],
+        _dataPack.roadway.left_Lane.rightBoundary.coefficient[0],
+        _color);
+
+    drawLine(_smartImage, bh, _smartImage.mHeight,
+        _dataPack.roadway.rightLane.left_Boundary.coefficient[1],
+        _dataPack.roadway.rightLane.left_Boundary.coefficient[0],
+        _color);
+
+    drawLine(_smartImage, bh, _smartImage.mHeight,
+        _dataPack.roadway.rightLane.rightBoundary.coefficient[1],
+        _dataPack.roadway.rightLane.rightBoundary.coefficient[0],
+        _color);
+}
+
