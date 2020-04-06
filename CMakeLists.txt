@@ -91,6 +91,13 @@ set_target_properties(${SDK_NAME} PROPERTIES
     )
 
 # install
+
+if(WIN32)
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_PREFIX "${SDK_ROOT}/install" CACHE PATH "default install path" FORCE)
+    endif()
+endif()
+
 set(SDK_CMAKE_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/${SDK_NAME}")
 set(SDK_CMAKE_BINDIR "${CMAKE_INSTALL_PREFIX}/bin")
 set(SDK_CMAKE_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
@@ -103,7 +110,7 @@ install(TARGETS ${SDK_NAME}
     RUNTIME DESTINATION ${SDK_CMAKE_BINDIR}
     )
 
-if(OS_WIN)
+if(WIN32)
     set(__3rdparty_src_dir ${OUTPUT_DIR}/bin/3rdparty)
     set(__3rdparty_dst_dir ${SDK_CMAKE_BINDIR})
 else()
@@ -130,12 +137,10 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
     )
 
-if(UNIX)
-    export(
-        EXPORT ${SDK_NAME}-targets
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
-        )
-endif()
+export(
+    EXPORT ${SDK_NAME}-targets
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
+    )
 
 configure_package_config_file(${SDK_NAME}-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake
