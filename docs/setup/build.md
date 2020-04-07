@@ -3,9 +3,9 @@
 ?> 该步骤是介绍如何使用SDK源码进行编译，如果您使用的是我们编译好的SDK动态库，请跳过这一步。
 
 ## 下载SDK源码
-SDK源码位于GitHub仓库，地址为 https://github.com/loadxtp/SmarterEyeSdk
+SDK源码位于GitHub仓库，地址为 https://github.com/SmarterEye/SmarterEyeSdk
 ```
-git clone https://github.com/loadxtp/SmarterEyeSdk.git
+git clone https://github.com/SmarterEye/SmarterEyeSdk.git
 
 目录结构
 SmarterEyeSdk

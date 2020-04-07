@@ -9,7 +9,7 @@
 ***
 
 ### 快速入门
-SDK 代码使用`C/C++`，基于 `Qt` 库编写，可以跨`Linux`, `Windows` 等多个平台。SDK提供源码可供编译使用，代码位于 [https://github.com/loadxtp/SmarterEyeSdk](https://github.com/loadxtp/SmarterEyeSdk)。我们同时也提供编译好的动态库，可在我司[官网](http://www.smartereye.com/)下载使用，或由FAE人员提供指定版本的SDK压缩包。
+SDK 代码使用`C/C++`，基于 `Qt` 库编写，可以跨`Linux`, `Windows` 等多个平台。SDK提供源码可供编译使用，代码位于 [https://github.com/SmarterEye/SmarterEyeSdk](https://github.com/SmarterEye/SmarterEyeSdk)。我们同时也提供编译好的动态库，可在我司[官网](http://www.smartereye.com/)下载使用，或由FAE人员提供指定版本的SDK压缩包。
 
 经测试可用于以下平台：
 
