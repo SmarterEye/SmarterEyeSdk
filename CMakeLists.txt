@@ -144,11 +144,6 @@ write_basic_package_version_file(
     COMPATIBILITY SameMajorVersion
     )
 
-export(
-    EXPORT ${SDK_NAME}-targets
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
-    )
-
 configure_package_config_file(${SDK_NAME}-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake
   INSTALL_DESTINATION ${SDK_CMAKE_INSTALLDIR}
@@ -157,6 +152,5 @@ configure_package_config_file(${SDK_NAME}-config.cmake.in
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-version.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/${SDK_NAME}-targets.cmake
   DESTINATION ${SDK_CMAKE_INSTALLDIR}
 )
