@@ -23,9 +23,6 @@ include_directories(${SDK_ROOT}/3rdparty/QAsioSocket/include)
 # src
 
 set(SDK_MODULES
-    src/MessageBus
-    src/RealtimeDatabase
-    src/RtdbService
     src/Satp
     src/SatpExt
     src/StereoCamera
@@ -33,9 +30,6 @@ set(SDK_MODULES
     )
 
 add_definitions(
-    -DMESSAGEBUS_LIBRARY
-    -DREALTIMEDATABASE_LIBRARY
-    -DRTDBSERVICE_LIBRARY
     -DSATP_LIBRARY
     -DSATPEXT_LIBRARY
     -DSTEREOCAMERA_LIBRARY
@@ -75,6 +69,19 @@ set(SDK_CMAKE_RPATH
 
 # build shared
 
+# QTRO
+qt5_generate_repc(SDK_INCS
+    ${SDK_ROOT}/reps/DeviceController.rep
+    REPLICA)
+
+qt5_generate_repc(SDK_INCS
+    ${SDK_ROOT}/reps/DeviceReporter.rep
+    REPLICA)
+
+qt5_generate_repc(SDK_INCS
+    ${SDK_ROOT}/reps/MotionData.rep
+    REPLICA)
+
 if(UNIX)
     qt5_wrap_cpp(MOC_SRC ${SDK_SRCS} ${SDK_INCS})
 endif()
@@ -83,7 +90,7 @@ add_library(${SDK_NAME} SHARED ${SDK_SRCS} ${SDK_INCS} ${MOC_SRC})
 add_dependencies(${SDK_NAME} QAsioSocket)
 target_link_libraries(${SDK_NAME}
     PRIVATE $<BUILD_INTERFACE:QAsioSocket>
-    Qt5::Core Qt5::Network
+    Qt5::Core Qt5::Network Qt5::RemoteObjects
     )
 set_target_properties(${SDK_NAME} PROPERTIES
     VERSION ${SDK_VERSION}

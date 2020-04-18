@@ -1,0 +1,12 @@
+class DeviceReporter
+{
+    ENUM NodePort{Default = 9528}
+
+    PROP(int currentErrorCode READONLY)
+    PROP(int updateProgress READONLY)
+    PROP(QString hardwareVersion READONLY)
+
+    SIGNAL(deviceStateChanged(int state, QVector<int> errorCodeList))
+    SIGNAL(updateError(int updateError))
+};
+

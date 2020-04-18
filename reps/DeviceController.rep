@@ -1,0 +1,28 @@
+class DeviceController
+{
+    ENUM NodePort{Default = 9527}
+
+    PROP(int imageWidth READONLY)
+    PROP(int imageHeight READONLY)
+    PROP(int lensFocus READONLY)
+    PROP(float sensorPixelSize READONLY)
+    PROP(int availableFrameIds READONLY)
+
+    PROP(QByteArray stereoCameraParameters READONLY)
+    PROP(QByteArray monoLeftCameraParameters READONLY)
+    PROP(QByteArray monoRightCameraParameters READONLY)
+    PROP(QByteArray rotationMatrix READONLY)
+
+    PROP(int ambientLight READONLY)
+    PROP(int smudgeStatus READONLY)
+
+    PROP(float frameRate)
+
+    SLOT(void controlTasks(int taskIds))
+    SLOT(void reboot(bool halt))
+    SLOT(void enableMotionData(bool enabled))
+
+    SLOT(int getImuParameter(const QString &name))
+    SLOT(void setImuParameter(const QString &name, int value))
+};
+

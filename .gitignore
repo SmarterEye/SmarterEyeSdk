@@ -37,3 +37,13 @@
 
 # MacOS
 .DS_Store
+
+# build
+build
+bin
+_output
+
+# exclude files
+messageadapter.*
+rtdbsender.*
+rtdbreceiver*

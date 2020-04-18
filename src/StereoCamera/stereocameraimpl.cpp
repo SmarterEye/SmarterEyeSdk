@@ -2,7 +2,6 @@
 #include <QTimer>
 #include <QDebug>
 #include <QThreadPool>
-#include <QSignalSpy>
 
 #include "stereocameraimpl.h"
 #include "protocol.h"

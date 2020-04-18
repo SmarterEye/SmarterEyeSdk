@@ -1,0 +1,7 @@
+class MotionData
+{
+    ENUM NodePort{Default = 9529}
+
+    PROP(QByteArray data READONLY)
+};
+
