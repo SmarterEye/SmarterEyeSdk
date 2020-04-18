@@ -22,6 +22,7 @@ public:
     uint8_t getErrorCodeCount() const;
     int errorCode(uint8_t index = 0) const;
     std::string errormsg(int errCode) const;
+    bool deviceHighTemperature() const{ return mIsHighTemperature; }
 
     SEDeviceState &operator=(const SEDeviceState &state_){
         mErrorCodeList.clear();
@@ -29,17 +30,18 @@ public:
             mErrorCodeList.push_back(state_.errorCode(i));
         }
         mDeviceState = state_.currentState();
+        mIsHighTemperature = state_.deviceHighTemperature();
         return *this;
     }
 
     void setDeviceState(DeviceState state);
-    void setErrorCodeList(const int *list);
+    void setErrorCodeList(const std::vector<int> errorCodeList);
     void clearErrorCodeList();
 
 private:
-
     DeviceState mDeviceState;
     std::vector<int> mErrorCodeList;
+    bool mIsHighTemperature;
 };
 
 

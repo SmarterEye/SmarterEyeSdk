@@ -9,8 +9,10 @@
 class StereoCameraImpl;
 class CameraHandler;
 class FrameHandler;
-class MonoCalibrationParameters;
-class StereoCalibrationParameters;
+class MotionDataHandler;
+
+struct MonoCalibrationParameters;
+struct StereoCalibrationParameters;
 struct RotationMatrix;
 
 namespace SATP {
@@ -27,34 +29,62 @@ public:
     void invokeInLoopThread(std::function<void()> method);
 
     void disconnectFromServer();
+
     bool isConnected();
+
     void requestFrame(FrameHandler *frameHandler, uint32_t frameIds);
+
+    void requestMotionData(MotionDataHandler *motionDataHandler);
+
     SATP::Protocol *getProtocol();
+
     void reboot(bool halt = false);
-    void switchStartupMode();
+
     int updateFirmware(const char* path);
+
     double getUpgradeProgress();
+
     void setFileReceiveDir(const char *dir);
+
     void enableTasks(uint32_t taskIds);
+
     bool requestStereoCameraParameters(StereoCalibrationParameters &params);
+
     bool requestMonoLeftCameraParameters(MonoCalibrationParameters &params);
+
     bool requestMonoRightCameraParameters(MonoCalibrationParameters &params);
+
     bool requestRotationMatrix(RotationMatrix &params);
+
     void enableMaxSendFrameInterval();
+
     bool setFrameRate(float rate);
+
     bool getFrameRate(float &rate);
+
     bool getAmbientLight(int &lightness);
+
     bool getSmudgeStatus(int &status);
+
     void setImuAccelRange(int value);
+
     void setImuRotationRange(int value);
+
     void setImuReadFrequence(int value);
+
     int getImuAccelRange();
+
     int getImuRotationRange();
+
     int getImuReadFrequence();
+
     void enableMotionData(bool enable);
+
     const SEDeviceState &getDeviceState();
+
 protected:
     StereoCamera();
+
     inline StereoCameraImpl *getImpl(){return mImpl;}
 
 private:

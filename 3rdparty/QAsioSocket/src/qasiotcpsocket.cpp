@@ -45,6 +45,7 @@ QAsioTcpsocket::~QAsioTcpsocket()
         -- linkCout;
         if (linkCout == 0) {
             delete ioserver;
+            ioserver = nullptr;
         }
         mut.unlock();
     }

@@ -3,25 +3,27 @@
 
 #include <QObject>
 #include <QMutex>
-#include "service.h"
+
 #include "sedevicestate.h"
 
-class DeviceStatus : public QObject, public Service
+class DeviceReporterReplica;
+
+class DeviceStatus : public QObject
 {
     Q_OBJECT
 public:
     static DeviceStatus *instance();
-    void handleMessage(int type, const char *message, int size);
+    void handleDeviceStateChanged(int state, QVector<int> errorCodeList);
     const SEDeviceState &getDeviceState();
-signals:
+    void acquireReplica(DeviceReporterReplica *replica);
 
-protected:
+signals:
 
 private:
     explicit DeviceStatus(QObject *parent = nullptr);
 
-    SEDeviceState *mSeDeviceState;
-    bool mIsHighTemperature;
+    SEDeviceState *mSeDeviceState = nullptr;
+    DeviceReporterReplica *mReplica = nullptr;
     QMutex mAccessMutex;
 };
 

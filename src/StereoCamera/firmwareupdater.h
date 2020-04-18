@@ -8,17 +8,16 @@
 #include "stereocamera_global.h"
 #include "blockhandler.h"
 #include "filesenderhandler.h"
-#include "service.h"
+
 namespace SATP {
     class Protocol;
     class FileSender;
 }
-class RealtimeDatabase;
+class DeviceReporterReplica;
 
 class STEREOCAMERASHARED_EXPORT FirmwareUpdater : public QObject,
         public SATP::BlockHandler,
-        public SATP::FileSenderHandler,
-        public Service
+        public SATP::FileSenderHandler
 {
     Q_OBJECT
 public:
@@ -27,31 +26,41 @@ public:
         Uploading,
         Upgrading
     };
-    explicit FirmwareUpdater(SATP::Protocol *protocol, RealtimeDatabase *rtdb, QObject *parent = nullptr);
+
+    explicit FirmwareUpdater(SATP::Protocol *protocol, QObject *parent = nullptr);
     virtual ~FirmwareUpdater();
+
     //override BlockHandler
     bool handleReceiveBlock(quint32 dataType, const char *block, int size);
     void handleReady();
     void handleReset();
+
     //override FileSenderHandler
     void handleSendFileFinished(const QString &fileName);
     void handleUpgradeProgress(int progress);
     int getUpdateStatus();
     int getUpdateWarning(){return mUpdateWarning;}
     void initSocket();
+    void acquireReplica(DeviceReporterReplica *replica);
+
+
 signals:
     void updateEvent(const QString &event);
+
 public slots:
     int update(const QString &path);
     double getUpdateProgress();
     bool isDeviceHighTemperature();
+
 protected:
     void handleUpdateResp(const char *block, int size);
     void triggerEvent(const QString &event);
-    void handleMessage(int type, const char *message, int size);
+    void handleDeviceStateChanged(int state, QVector<int> errorCodeList);
     void timerEvent(QTimerEvent *event);
     void startProgressCheckTimer();
     void decodeUDPdatagram(QString datagram);
+    bool isReplicaValid() const;
+
 protected slots:
     void processPendingDatagram();
     void onErrorOccur(QAbstractSocket::SocketError sockError);
@@ -59,7 +68,7 @@ protected slots:
 private:
     SATP::Protocol *mProtocol;
     SATP::FileSender *mFileSender;
-    RealtimeDatabase *mRtdb;
+    DeviceReporterReplica *mReplica = nullptr;
     UpdateStatus mUpdateStatus;
     QByteArray mFirmwareMd5;
     int mUpgradeProgress;

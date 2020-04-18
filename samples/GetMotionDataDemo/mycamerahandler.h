@@ -9,29 +9,17 @@
 class MyCameraHandler: public CameraHandler
 {
 public:
-    MyCameraHandler(std::string name);
-    void handleRawFrame(const RawImageFrame *rawFrame);
-    int getMotionListSize()
-    {
-        return mMotionList.size();
-    }
-    void readMotionData(MotionData& data)
-    {
-        std::lock_guard<std::mutex> lock(mMutex);
-        data = mMotionList.front();
-        mMotionList.pop_front();
-    }
-    void addMotionData(MotionData& data)
-    {
-        std::lock_guard<std::mutex> lock(mMutex);
-        mMotionList.push_back(data);
-    }
+    MyCameraHandler(const std::string &name);
+
+    void handleRawFrame(const RawImageFrame *rawFrame) override;
+
+    void handleMotionData(const MotionData *motionData) override;
+
 protected:
     void processFrame(int frameId, const char *extended, size_t size);
 
 private:
     std::string mName;
-    std::list<MotionData> mMotionList;
     std::mutex mMutex;
 };
 

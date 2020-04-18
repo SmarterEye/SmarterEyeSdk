@@ -2,10 +2,6 @@ add_definitions(-std=c++11)
 
 message("Current folder is: ${CMAKE_CURRENT_SOURCE_DIR}")
 
-if(WIN32)
-    set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_LIST_DIR}/../install)
-endif()
-
 find_package(smarter_eye_sdk)
 
 if(smarter_eye_sdk_FOUND)

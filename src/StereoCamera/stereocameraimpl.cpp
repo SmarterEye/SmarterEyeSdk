@@ -1,7 +1,8 @@
-#include <thread>
 #include <QCoreApplication>
 #include <QTimer>
 #include <QDebug>
+#include <QThreadPool>
+#include <QSignalSpy>
 
 #include "stereocameraimpl.h"
 #include "protocol.h"
@@ -9,19 +10,17 @@
 #include "framereceiver.h"
 #include "filereceiver.h"
 #include "camerahandler.h"
-#include "messagebus.h"
-#include "messageadapter.h"
-#include "message.h"
-#include "rtdbareceiver.h"
 #include "firmwareupdater.h"
 #include "taskiddef.h"
-#include "rtdbkeys.h"
-#include "realtimedatabase.h"
 #include "calibrationparams.h"
 #include "rotationmatrix.h"
-#include "messageutils.h"
-#include "QThreadPool"
 #include "filesender.h"
+#include "motiondatahandler.h"
+#include "motiondatareceiver.h"
+
+#include "rep_DeviceController_replica.h"
+#include "rep_DeviceReporter_replica.h"
+
 
 #ifdef Q_OS_LINUX
 static const QString kAdasDownloadPath(QString(getenv("HOME")) + "/ADAS_Files/");
@@ -34,16 +33,15 @@ StereoCameraImpl::StereoCameraImpl(QObject *parent)
       mConnector(nullptr),
       mFrameReceiver(nullptr),
       mFileReceiver(nullptr),
-      mMessageBus(nullptr),
-      mRtdbReceiver(nullptr),
+      mFileSender(nullptr),
       mFirmwareUpdater(nullptr),
+      mControllerNode(nullptr),
+      mReporterNode(nullptr),
       mTaskIds(TaskId::AllTasks),
-      mMessageAdapter(nullptr),
       mImageWidth(1280),
       mImageHeight(720),
       mLensFocus(8),
-      mSensorPixelSize(4.2e-06f),
-      mFileSender(nullptr)
+      mSensorPixelSize(4.2e-06f)
 {
     QThreadPool::globalInstance()->setMaxThreadCount(20);
     init();
@@ -53,22 +51,16 @@ StereoCameraImpl::~StereoCameraImpl()
 {
     if (mConnector) {
         mConnector->getProtocol()->unregisterBlockHandler(this);
-        mMessageBus->unregisterService(this);
-        mMessageBus->unregisterService(mRtdbReceiver);
-        mMessageBus->unregisterService(mFirmwareUpdater);
-        if (mMessageAdapter) {
-            mMessageBus->unregisterService(mMessageAdapter);
-            delete mMessageAdapter;
-        }
 
-        delete mRtdbReceiver;
         delete mFirmwareUpdater;
         delete mFrameReceiver;
         delete mFileReceiver;
-        delete mMessageBus;
+        delete mMotionDataReceiver;
+
         mConnector->deleteLater();
     }
-    if(mFileSender)delete mFileSender;
+
+    if (mFileSender) delete mFileSender;
 }
 
 void StereoCameraImpl::init()
@@ -83,46 +75,33 @@ void StereoCameraImpl::init()
     mFileReceiver->registerReceiverHandler(this);
     mFileReceiver->setRecvFileDir(kAdasDownloadPath);
 
-    mMessageBus = new MessageBus(false);
-
-    mMessageAdapter = new MessageAdapter(protocol);
-    mMessageAdapter->registerUrgentMessage(MessageType::PauseObstacleTask);
-    mMessageAdapter->registerUrgentMessage(MessageType::PauseLaneTask);
-    mMessageAdapter->registerUrgentMessage(MessageType::PauseDisplayTask);
-    mMessageAdapter->registerUrgentMessage(MessageType::PauseHeightTask);
-
-    mMessageBus->registerService(this);
-    mRtdbReceiver = new RtdbReceiver(protocol);
-    mMessageBus->registerService(mRtdbReceiver);
-
-    mFirmwareUpdater = new FirmwareUpdater(protocol, mRtdbReceiver->getRtdb());
-    mMessageBus->registerService(mFirmwareUpdater);
+    mFirmwareUpdater = new FirmwareUpdater(protocol);
     connect(mFirmwareUpdater,
             SIGNAL(updateEvent(const QString&)),
             this,
             SLOT(onFirmwareUpdateEvent(const QString&)));
-    connect(mRtdbReceiver, &RtdbReceiver::rtdbLoaded, this, [this](){
-        RealtimeDatabase *rtdb = mRtdbReceiver->getRtdb();
-        mImageWidth = rtdb->getValueItem(RtdbKey::ImageWidth, mImageWidth);
-        mImageHeight = rtdb->getValueItem(RtdbKey::ImageHeight, mImageHeight);
-        mLensFocus = rtdb->getValueItem(RtdbKey::LensFocus, mLensFocus);
-        mSensorPixelSize = rtdb->getValueItem(RtdbKey::SensorPixelSize, 4.2f) * 1e-06f;
-        emit camImageWidthChanged(mImageWidth);
-        emit camImageHeightChanged(mImageHeight);
-        emit camLensFocusChanged(mLensFocus);
-        emit camSensorPixelSizeChanged(mSensorPixelSize);
+
+    mMotionDataReceiver = new MotionDataReceiver();
+    connect(this, &StereoCameraImpl::cameraConnected, this, [this]{
+        mMotionDataReceiver->init(getAddress());
     });
-    mMessageBus->registerService(DeviceStatus::instance());
+
+    connect(this, &StereoCameraImpl::cameraConnected, this, &StereoCameraImpl::initRemoteNode);
+
+    mIsImuDataEnable = false;
+}
+
+bool StereoCameraImpl::isReplicaValid() const
+{
+    bool controllerReplicaValid = mControllerReplica && mControllerReplica->isReplicaValid();
+    bool reporterReplicaValid = mReporterReplica && mReporterReplica->isReplicaValid();
+
+    return controllerReplicaValid && reporterReplicaValid;
 }
 
 void StereoCameraImpl::connectTo(QString addr)
 {
-    mMessageBus->unregisterService(mMessageAdapter);
-    if (!addr.contains("127.0.0.1")) {
-        mMessageBus->registerService(mMessageAdapter);
-    }
     mConnector->connectTo(addr);
-
 }
 
 SATP::Protocol *StereoCameraImpl::getProtocol()
@@ -133,6 +112,11 @@ SATP::Protocol *StereoCameraImpl::getProtocol()
 void StereoCameraImpl::requestFrame(FrameHandler *handler, uint32_t frameIds)
 {
     mFrameReceiver->requestFrame(handler, frameIds);
+}
+
+void StereoCameraImpl::requestMotionData(MotionDataHandler *handler)
+{
+    mMotionDataReceiver->requestMotionData(handler);
 }
 
 bool StereoCameraImpl::handleReceiveBlock(quint32 dataType, const char *block, int size)
@@ -146,13 +130,11 @@ bool StereoCameraImpl::handleReceiveBlock(quint32 dataType, const char *block, i
 void StereoCameraImpl::handleReady()
 {
     emit cameraConnected();
-    controlTasks();
 }
 
 void StereoCameraImpl::handleReset()
 {
     emit cameraDisconnected();
-    mRtdbReceiver->getRtdb()->clearData();
 }
 
 void StereoCameraImpl::handleReceiveFile(const QString &fileName)
@@ -165,37 +147,11 @@ void StereoCameraImpl::handleReceiveFile(const QString &fileName)
     }
 }
 
-void StereoCameraImpl::handleMessage(int type, const char *message, int size)
-{
-    Q_UNUSED(size)
-
-    switch (type) {
-    case MessageType::QueryAvailableFrameIdsResp:
-    {
-        const MessageIntegerData *msg = reinterpret_cast<const MessageIntegerData*>(message);
-        quint16 ids = msg->data;
-        emit gotAvailableFrameIds(ids);
-        break;
-    }
-
-    }
-}
-
 void StereoCameraImpl::controlTasks()
 {
-    struct MessageTaskCommand command;
-
-    command.enable = (mTaskIds & TaskId::ObstacleTask);
-    sendMessage(MessageType::PauseObstacleTask, command);
-
-    command.enable = (mTaskIds & TaskId::LaneTask);
-    sendMessage(MessageType::PauseLaneTask, command);
-
-    command.enable = (mTaskIds & TaskId::HeightLimitTask);
-    sendMessage(MessageType::PauseHeightTask, command);
-
-    command.enable = (mTaskIds & TaskId::DisplayTask);
-    sendMessage(MessageType::PauseDisplayTask, command);
+    if (isReplicaValid()) {
+        mControllerReplica->controlTasks(mTaskIds);
+    }
 }
 
 void StereoCameraImpl::reconnect()
@@ -218,24 +174,19 @@ QString StereoCameraImpl::getAddress()
     return mConnector->getHostName();
 }
 
-void StereoCameraImpl::switchStartupMode()
-{
-    sendMessage(MessageType::SwitchMode);
-}
-
 void StereoCameraImpl::enableTasks(uint32_t taskIds)
 {
     mTaskIds = taskIds;
-    if (isConnected()) {
+    if (isReplicaValid()) {
         controlTasks();
     }
 }
 
 void StereoCameraImpl::reboot(bool halt)
 {
-    MessageShutdown shutdown;
-    shutdown.isRebooting = halt ? 0 : 1;
-    sendMessage(MessageType::Shutdown, shutdown);
+    if (isReplicaValid()) {
+        mControllerReplica->reboot(halt);
+    }
 }
 
 int StereoCameraImpl::updateFirmware(QString path)
@@ -248,7 +199,8 @@ double StereoCameraImpl::getUpdateProgress()
     return mFirmwareUpdater->getUpdateProgress();
 }
 
-int StereoCameraImpl::getUpdateStatus(){
+int StereoCameraImpl::getUpdateStatus()
+{
     return mFirmwareUpdater->getUpdateStatus();
 }
 
@@ -283,110 +235,145 @@ void StereoCameraImpl::onFirmwareUpdateEvent(const QString &event)
     }
 }
 
+void StereoCameraImpl::initRemoteNode()
+{
+    if (!mControllerNode && !mReporterNode) {
+        mControllerNode = new QRemoteObjectNode(this);
+        QString controllerUrlStr = "tcp://" + getAddress() + ":" + QString::number(DeviceControllerReplica::NodePort::Default);
+        mControllerNode->connectToNode(QUrl(controllerUrlStr));
+        mControllerReplica = mControllerNode->acquire<DeviceControllerReplica>();
+        mControllerReplica->waitForSource(3000);
+
+        mReporterNode = new QRemoteObjectNode(this);
+        QString reporterUrlStr = "tcp://" + getAddress() + ":" + QString::number(DeviceReporterReplica::NodePort::Default);
+        mReporterNode->connectToNode(QUrl(reporterUrlStr));
+        mReporterReplica = mReporterNode->acquire<DeviceReporterReplica>();
+        mReporterReplica->waitForSource(3000);
+
+        mFirmwareUpdater->acquireReplica(mReporterReplica);
+        DeviceStatus::instance()->acquireReplica(mReporterReplica);
+    }
+
+    if (!isReplicaValid()) {
+        mControllerReplica->waitForSource(3000);
+        mReporterReplica->waitForSource(3000);
+    } else {
+        controlTasks();
+
+        mImageWidth = mControllerReplica->imageWidth();
+        mImageHeight = mControllerReplica->imageHeight();
+        mLensFocus = mControllerReplica->lensFocus();
+        mSensorPixelSize = mControllerReplica->sensorPixelSize() * 1e-06f;
+
+        emit camImageWidthChanged(mImageWidth);
+        emit camImageHeightChanged(mImageHeight);
+        emit camLensFocusChanged(mLensFocus);
+        emit camSensorPixelSizeChanged(mSensorPixelSize);
+    }
+
+    if (mIsImuDataEnable) {
+        QTimer::singleShot(1000,this,[this]{
+            enableMotionData(true);
+        });
+    }
+}
+
 bool StereoCameraImpl::requestStereoCameraParameters(StereoCalibrationParameters &params)
 {
-    if(!isConnected()) {
+    if (!isReplicaValid()) {
         return false;
     }
 
-    QString stParamsPart1 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::StereoParametersPart1);
-    QString stParamsPart2 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::StereoParametersPart2);
-    if(stParamsPart1.isEmpty() || stParamsPart2.isEmpty()) {
+    auto rpcData = mControllerReplica->stereoCameraParameters();
+
+    if (rpcData.isNull()) {
         return false;
     }
 
-    QStringList list = (stParamsPart1 + "," + stParamsPart2).split(",");
+    StereoCalibrationParameters *temp = reinterpret_cast<StereoCalibrationParameters*>(rpcData.data());
 
-    params.focus = list[0].toDouble();
-    params.cx = list[1].toDouble();
-    params.cy = list[2].toDouble();
-    params.RRoll = list[3].toDouble();
-    params.RPitch = list[4].toDouble();
-    params.RYaw = list[5].toDouble();
-    params.Tx = list[6].toDouble();
-    params.Ty = list[7].toDouble();
-    params.Tz = list[8].toDouble();
+    params.focus = temp->focus;
+    params.cx = temp->cx;
+    params.cy = temp->cy;
+    params.RRoll = temp->RRoll;
+    params.RPitch = temp->RPitch;
+    params.RYaw = temp->RYaw;
+    params.Tx = temp->Tx;
+    params.Ty = temp->Ty;
+    params.Tz = temp->Tz;
 
     return true;
 }
 
 bool StereoCameraImpl::requestMonoLeftCameraParameters(MonoCalibrationParameters &params)
 {
-    if(!isConnected()) {
+    if (!isReplicaValid()) {
         return false;
     }
 
-    QString stParamsPart1 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::LeftMonoParametersPart1);
-    QString stParamsPart2 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::LeftMonoParametersPart2);
-    if(stParamsPart1.isEmpty() || stParamsPart2.isEmpty()) {
+    auto rpcData = mControllerReplica->monoLeftCameraParameters();
+
+    if (rpcData.isNull()) {
         return false;
     }
 
-    QStringList list = (stParamsPart1 + "," + stParamsPart2).split(",");
-    params.fx = list[0].toDouble();
-    params.fy = list[1].toDouble();
-    params.cx = list[2].toDouble();
-    params.cy = list[3].toDouble();
-    params.k1 = list[4].toDouble();
-    params.k2 = list[5].toDouble();
-    params.k3 = list[6].toDouble();
-    params.p1 = list[7].toDouble();
-    params.p2 = list[8].toDouble();
+    MonoCalibrationParameters *temp = reinterpret_cast<MonoCalibrationParameters*>(rpcData.data());
+
+    params.fx = temp->fx;
+    params.fy = temp->fy;
+    params.cx = temp->cx;
+    params.cy = temp->cy;
+    params.k1 = temp->k1;
+    params.k2 = temp->k2;
+    params.k3 = temp->k3;
+    params.p1 = temp->p1;
+    params.p2 = temp->p2;
 
     return true;
 }
 
 bool StereoCameraImpl::requestMonoRightCameraParameters(MonoCalibrationParameters &params)
 {
-    if(!isConnected()) {
+    if (!isReplicaValid()) {
         return false;
     }
 
-    QString stParamsPart1 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::RightMonoParametersPart1);
-    QString stParamsPart2 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::RightMonoParametersPart2);
-    if(stParamsPart1.isEmpty() || stParamsPart2.isEmpty()) {
+    auto rpcData = mControllerReplica->monoRightCameraParameters();
+
+    if (rpcData.isNull()) {
         return false;
     }
 
-    QStringList list = (stParamsPart1 + "," + stParamsPart2).split(",");
-    params.fx = list[0].toDouble();
-    params.fy = list[1].toDouble();
-    params.cx = list[2].toDouble();
-    params.cy = list[3].toDouble();
-    params.k1 = list[4].toDouble();
-    params.k2 = list[5].toDouble();
-    params.k3 = list[6].toDouble();
-    params.p1 = list[7].toDouble();
-    params.p2 = list[8].toDouble();
+    MonoCalibrationParameters *temp = reinterpret_cast<MonoCalibrationParameters*>(rpcData.data());
+
+    params.fx = temp->fx;
+    params.fy = temp->fy;
+    params.cx = temp->cx;
+    params.cy = temp->cy;
+    params.k1 = temp->k1;
+    params.k2 = temp->k2;
+    params.k3 = temp->k3;
+    params.p1 = temp->p1;
+    params.p2 = temp->p2;
 
     return true;
 }
 
 bool StereoCameraImpl::requestRotationMatrix(RotationMatrix &rotationMatrix)
 {
-    if(!isConnected()) {
+    if (!isReplicaValid()) {
         return false;
     }
 
-    QString real3DToImagePart1 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::Real3DToImageRotationMatrixPart1);
-    QString real3DToImagePart2 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::Real3DToImageRotationMatrixPart2);
-    QString real3DToImagePart3 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::Real3DToImageRotationMatrixPart3);
-    QString imageToReal3DPart1 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::ImageToReal3DRotationMatrixPart1);
-    QString imageToReal3DPart2 = mRtdbReceiver->getRtdb()->getStringItem(RtdbKey::ImageToReal3DRotationMatrixPart2);
-    if(real3DToImagePart1.isEmpty() || real3DToImagePart2.isEmpty() || real3DToImagePart3.isEmpty()
-            || imageToReal3DPart1.isEmpty() || imageToReal3DPart2.isEmpty()) {
+    auto rpcData = mControllerReplica->rotationMatrix();
+
+    if (rpcData.isNull()) {
         return false;
     }
 
-    QStringList list = (real3DToImagePart1 + "," + real3DToImagePart2 + "," + real3DToImagePart3).split(",");
-    for(int i=0; i<kNumReal3DToImage; i++) {
-        rotationMatrix.real3DToImage[i] = list[i].toFloat();
-    }
-
-    list = (imageToReal3DPart1 + "," + imageToReal3DPart2).split(",");
-    for(int i=0; i<kNumImageToReal3D; i++) {
-        rotationMatrix.imageToReal3D[i] = list[i].toFloat();
-    }
+    RotationMatrix *temp = reinterpret_cast<RotationMatrix*>(rpcData.data());
+    memcpy(rotationMatrix.real3DToImage, temp->real3DToImage, kNumReal3DToImage);
+    memcpy(rotationMatrix.imageToReal3D, temp->imageToReal3D, kNumImageToReal3D);
 
     return true;
 }
@@ -398,10 +385,8 @@ void StereoCameraImpl::enableMaxSendFrameInterval()
 
 bool StereoCameraImpl::setFrameRate(float rate)
 {
-    if (isConnected()) {
-        MessageFrameRate command;
-        MessageUtils::copyQStringToMString(QString::number(rate), command.frameRate);
-        sendMessage(MessageType::SetFrameRate, command);
+    if (isReplicaValid()) {
+        mControllerReplica->pushFrameRate(rate);
         return true;
     } else {
         return false;
@@ -410,8 +395,8 @@ bool StereoCameraImpl::setFrameRate(float rate)
 
 bool StereoCameraImpl::getFrameRate(float &rate)
 {
-    if (isConnected()) {
-        rate = mRtdbReceiver->getRtdb()->getValueItem(RtdbKey::CameraFrameRate, 30.0);
+    if (isReplicaValid()) {
+        rate = mControllerReplica->frameRate();
         return true;
     } else {
         return false;
@@ -420,13 +405,9 @@ bool StereoCameraImpl::getFrameRate(float &rate)
 
 bool StereoCameraImpl::getAmbientLight(int &lightness)
 {
-    if (isConnected()) {
-        if(mRtdbReceiver->isLoaded()){
-            lightness = mRtdbReceiver->getRtdb()->getValueItem(RtdbKey::EnvIlluminace, 0);
-            return true;
-        }else{
-        return false;
-        }
+    if (isReplicaValid()) {
+        lightness = mControllerReplica->ambientLight();
+        return true;
     } else {
         return false;
     }
@@ -434,8 +415,8 @@ bool StereoCameraImpl::getAmbientLight(int &lightness)
 
 bool StereoCameraImpl::getSmudgeStatus(int &status)
 {
-    if (isConnected() && mRtdbReceiver->isLoaded()) {
-        status = mRtdbReceiver->getRtdb()->getValueItem(RtdbKey::SmudgeStatus, 0);
+    if (isReplicaValid()) {
+        status = mControllerReplica->smudgeStatus();
         return true;
     }
     return false;
@@ -448,25 +429,33 @@ int StereoCameraImpl::getUpdateWarning()
 
 bool StereoCameraImpl::isDeviceHighTemperature()
 {
-    return mFirmwareUpdater->isDeviceHighTemperature();
+    bool ret = getDeviceState().deviceHighTemperature()
+            || mFirmwareUpdater->isDeviceHighTemperature();
+    return ret;
 }
 
 void StereoCameraImpl::setImuParameter(const QString &name, int value)
 {
-    mRtdbReceiver->saveRtdbItemByName(name, value);
+    if (isReplicaValid()) {
+        mControllerReplica->setImuParameter(name, value);
+    }
 }
 
 int StereoCameraImpl::getImuParameter(const QString &name)
 {
-    return mRtdbReceiver->getRtdbValueByName(name).toInt();
+    if (isReplicaValid()) {
+        return mControllerReplica->getImuParameter(name).returnValue();
+    } else {
+        return 0;
+    }
 }
 
 bool StereoCameraImpl::sendFileToDevice(const QString &filePath)
 {
-    if(!mFileSender){
+    if (!mFileSender) {
         mFileSender = new SATP::FileSender(mConnector->getProtocol(), this);
     }
-    if(!mConnector->isConnected())return false;
+    if (!mConnector->isConnected()) return false;
 
     mFileSender->setAutoDelete(false);
     mFileSender->send(filePath);
@@ -480,7 +469,11 @@ void StereoCameraImpl::handleSendFileFinished(const QString &fileName)
 
 void StereoCameraImpl::enableMotionData(bool enable)
 {
-    mRtdbReceiver->saveRtdbItemByName("ImuDataEnable",(quint16)enable);
+    if (isReplicaValid()) {
+        mControllerReplica->enableMotionData(enable);
+    }
+
+    mIsImuDataEnable = enable;
 }
 
 const SEDeviceState &StereoCameraImpl::getDeviceState()

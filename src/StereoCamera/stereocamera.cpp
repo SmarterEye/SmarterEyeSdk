@@ -81,6 +81,14 @@ void StereoCamera::requestFrame(FrameHandler *frameHandler, uint32_t frameIds)
     invokeInLoopThread(fr);
 }
 
+void StereoCamera::requestMotionData(MotionDataHandler *motionDataHandler)
+{
+    std::function<void()> fr = [this, motionDataHandler]{
+        mImpl->requestMotionData(motionDataHandler);
+    };
+    invokeInLoopThread(fr);
+}
+
 bool StereoCamera::requestStereoCameraParameters(StereoCalibrationParameters &params)
 {
     return mImpl->requestStereoCameraParameters(params);
@@ -133,14 +141,6 @@ bool StereoCamera::getAmbientLight(int &lightness)
 bool StereoCamera::getSmudgeStatus(int &status)
 {
     return mImpl->getSmudgeStatus(status);
-}
-
-void StereoCamera::switchStartupMode()
-{
-    std::function<void()> method = [this]{
-        mImpl->switchStartupMode();
-    };
-    invokeInLoopThread(method);
 }
 
 void StereoCamera::reboot(bool halt)

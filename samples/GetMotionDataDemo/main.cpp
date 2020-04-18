@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <chrono>
 #include <thread>
@@ -12,8 +12,10 @@ int main(int argc, char *argv[])
     StereoCamera *cameraA = StereoCamera::connect("192.168.1.251");
     MyCameraHandler *cameraHandlerA = new MyCameraHandler("camera A");
 
-    while (!cameraA->isConnected()) {
+    bool isConnected = false;
+    while (!isConnected) {
         printf("connecting...\n");
+        isConnected = cameraA->isConnected();
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
@@ -27,21 +29,21 @@ int main(int argc, char *argv[])
     cameraA->setImuRotationRange(500); //250,500,1000,2000;default is 500
     cameraA->setImuReadFrequence(100); //10-100Hz;default is 100Hz
 
+    //request to get frames and motiondata
     cameraA->requestFrame(cameraHandlerA, FrameId::CalibLeftCamera);
+    cameraA->enableTasks(TaskId::DisplayTask);
+    cameraA->requestMotionData(cameraHandlerA);
     cameraA->enableMotionData(true);
-    MotionData data;
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(80));
-        int size = cameraHandlerA->getMotionListSize();
-        for (int index = 0;index < size;index++) {
-            cameraHandlerA->readMotionData(data);
-            std::cout << "accel x:" << data.accelX << "g" << std::endl;
-            std::cout << "accel y:" << data.accelY << "g" << std::endl;
-            std::cout << "accel z:" << data.accelZ << "g" << std::endl;
-            std::cout << "rotation x:" << data.rotationX << "deg/s" << std::endl;
-            std::cout << "rotation y:" << data.rotationY << "deg/s" << std::endl;
-            std::cout << "rotation z:" << data.rotationZ << "deg/s" << std::endl;
-            std::cout << "time stamp:" << data.timestamp << "ms" << std::endl;
+
+    int c = 0;
+    while (c!= 'x')
+    {
+        if (c == 'z') {
+            cameraA->disconnectFromServer();
+            break;
         }
+        c = getchar();
     }
+
+    return 0;
 }
