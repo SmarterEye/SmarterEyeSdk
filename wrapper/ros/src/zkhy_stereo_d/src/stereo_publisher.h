@@ -12,6 +12,10 @@
 
 class StereoCamera;
 class FrameMonitor;
+struct MotionData;
+namespace cv{
+    class Mat;
+}
 
 class StereoPublisher
 {
@@ -25,7 +29,8 @@ public:
     bool onRotationMatrixRequest(zkhy_stereo_d::RotationMatrix::Request &req,
                                zkhy_stereo_d::RotationMatrix::Response &resp);
 
-    void publishFrames();
+    void publishFrameCallback(int frameId, const cv::Mat &img_mat);
+    void publishImuCallback(const MotionData *motionData);
 
 private:
     ros::NodeHandle node_handler_;
@@ -35,6 +40,8 @@ private:
     image_transport::Publisher right_gray_pub_;
     image_transport::Publisher right_color_pub_;
     image_transport::Publisher disparity_pub_;
+
+    ros::Publisher imu_pub_;
 
     ros::ServiceServer camera_params_server_;
     ros::ServiceServer rotation_matrix_server_;

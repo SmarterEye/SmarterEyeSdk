@@ -16,7 +16,7 @@ link_directories(${OpenCV_DIR})
 if (WIN32)
     link_libraries(${OpenCV_LIBS})
 else()
-    llink_libraries(${OpenCV_LIBS} pthread)
+    link_libraries(${OpenCV_LIBS} pthread)
 endif()
 
 add_executable(DisplayFramesDemo

@@ -25,6 +25,11 @@ void FrameMonitor::handleRawFrame(const RawImageFrame *rawFrame)
     processFrame(rawFrame);
 }
 
+void FrameMonitor::handleMotionData(const MotionData *motionData)
+{
+    mMotionDataCallback(motionData);
+}
+
 void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
 {
     switch (rawFrame->frameId) {
@@ -33,6 +38,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
         // only for FrameFormat::Disparity16, bitNum = 5
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mDisparityMat);
+        mFrameCallback(FrameId::Disparity, mDisparityMat);
 
         std::cout << "update disparity mat" << std::endl;
         mFrameReadyFlag = true;
@@ -43,6 +49,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
     {
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mLeftMat);
+        mFrameCallback(FrameId::CalibLeftCamera, mLeftMat);
 
         std::cout << "update left mat" << std::endl;
         mFrameReadyFlag = true;
@@ -53,6 +60,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
     {
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mRightMat);
+        mFrameCallback(FrameId::CalibRightCamera, mRightMat);
 
         std::cout << "update right mat" << std::endl;
         mFrameReadyFlag = true;

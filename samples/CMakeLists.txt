@@ -18,6 +18,6 @@ if (${OPENCV_FOUND})
 endif()
 
 include(find_pcl.cmake)
-if (${PCL_FOUND})
+if (${PCL_FOUND} AND ${PCL_VERSION} VERSION_GREATER_EQUAL 1.9)
     add_subdirectory(PointCloudDemo)
 endif()

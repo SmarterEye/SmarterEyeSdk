@@ -3,6 +3,7 @@
 #include "image_transport/image_transport.h"
 #include "cv_bridge/cv_bridge.h"
 #include "sensor_msgs/image_encodings.h"
+#include "sensor_msgs/Imu.h"
 
 #include "zkhy_stereo_d/CameraParams.h"
 #include "zkhy_stereo_d/RotationMatrix.h"
@@ -21,6 +22,7 @@ public:
     void grayCallback(const sensor_msgs::ImageConstPtr &msg);
     void colorCallback(const sensor_msgs::ImageConstPtr &msg);
     void disparityCallback(const sensor_msgs::ImageConstPtr &msg);
+    void imuCallback(const sensor_msgs::ImuConstPtr &msg);
 
 private:
     ros::NodeHandle node_handler_;
@@ -28,6 +30,7 @@ private:
     image_transport::Subscriber gray_sub_;
     image_transport::Subscriber color_sub_;
     image_transport::Subscriber disparity_sub_;
+    ros::Subscriber imu_sub_;
 
     ros::ServiceClient get_camera_params_client_;
     ros::ServiceClient get_rotation_matrix_client_;
@@ -39,6 +42,7 @@ StereoListener::StereoListener()
     gray_sub_ = it_.subscribe("/zkhy_stereo/left/gray", 1, &StereoListener::grayCallback, this);
     color_sub_ = it_.subscribe("/zkhy_stereo/left/color", 1, &StereoListener::colorCallback, this);
     disparity_sub_ = it_.subscribe("/zkhy_stereo/disparity", 1, &StereoListener::disparityCallback, this);
+    imu_sub_ = node_handler_.subscribe("/zkhy_stereo/imu", 1, &StereoListener::imuCallback, this);
 
     get_camera_params_client_ = node_handler_.serviceClient<zkhy_stereo_d::CameraParams>("/zkhy_stereo/get_camera_params");
     get_rotation_matrix_client_ = node_handler_.serviceClient<zkhy_stereo_d::RotationMatrix>("/zkhy_stereo/get_rotation_matrix");
@@ -94,6 +98,20 @@ void StereoListener::disparityCallback(const sensor_msgs::ImageConstPtr &msg)
     cv::waitKey(80);
 }
 
+void StereoListener::imuCallback(const sensor_msgs::ImuConstPtr &msg)
+{
+    ROS_INFO("Imu Seq: [%d]", msg->header.seq);
+    ROS_INFO("Imu stamp: [%d]", msg->header.stamp);
+    ROS_INFO("Imu linear_acceleration x: [%f], y: [%f], z: [%f]",
+            msg->linear_acceleration.x,
+            msg->linear_acceleration.y,
+            msg->linear_acceleration.z);
+    ROS_INFO("Imu angular_velocity x: [%f], y: [%f], z: [%f]",
+             msg->angular_velocity.x,
+             msg->angular_velocity.y,
+             msg->angular_velocity.z);
+}
+
 void StereoListener::getCameraParams()
 {
     // no request param
@@ -104,7 +122,7 @@ void StereoListener::getCameraParams()
         // got camera params here
         std::cout << "camera focus: " << camera_params_resp.focus << std::endl;
     } else {
-        std::cout << "error foo" << std::endl;
+        std::cout << "error getCameraParams" << std::endl;
     }
 }
 
@@ -120,6 +138,7 @@ void StereoListener::getRotationMatrix()
         std::cout << "error bar" << std::endl;
     }
 }
+
 
 int main(int argc, char* argv[])
 {
