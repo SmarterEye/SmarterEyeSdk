@@ -3,6 +3,7 @@
 车道线数据头文件：`LdwDataInterface.h`
 
 ## 世界坐标系
+
 1. 左镜头的中心作为世界坐标系的原点
 2. 车辆前进方向为+Z轴
 3. 平行路面且垂直Z轴的方向为X轴,右侧为+X
@@ -29,13 +30,15 @@ x=C0 + C1 * z + C2 * z ^ 2 + C3 * z ^ 3
 $$
 
 ### 车道线边界结构体定义
+
 ```C++
-typedef struct LdwLaneBoundary__
+struct LdwLaneBoundary
 {
     int degree;
     float coefficient[4];
-}LdwLaneBoundary;
+};
 ```
+
 degree : 车道线边界的方程次数  
 coefficient : 方程的系数。其中：  
 `coefficient[0]` : C0  
@@ -46,14 +49,14 @@ coefficient : 方程的系数。其中：
 ## 车道线
 
 ```C++
-typedef struct LdwLane__
+struct LdwLane
 {
     int width;						//单一车道线的宽度（单位：mm）
     int qualityGrade;				//车道线识别的质量（目前推荐通过类型判断车道线的质量）
     LdwLaneStyle style;				//车道线类型
     LdwLaneBoundary left_Boundary;  //车道线左侧边界
     LdwLaneBoundary rightBoundary;  //车道线右侧边界
-}LdwLane;
+};
 ```
 
 ### 车道线类型
@@ -78,7 +81,7 @@ enum LdwLaneStyle
 ## 路面
 
 ```C++
-typedef struct LdwRoadway__
+struct LdwRoadway
 {
     int width[3];
     bool isTracking;
@@ -86,8 +89,9 @@ typedef struct LdwRoadway__
     LdwLane rightLane;
     LdwLane adjacentLeft_Lane;
     LdwLane adjacentRightLane;
-}LdwRoadway;
+};
 ```
+
 #### 解释说明：
 
 width：两车道线间宽度，公式憋死条车道线，三个宽度，下标从左到右依次为0、1、2（mm）  
@@ -96,5 +100,3 @@ left_Lane : 与坐标原点最近的左侧车道线
 rightLane : 与坐标原点最近的右侧车道线  
 adjacentLeft_Lane :与左侧车道线最近的外侧车道线 (目前参数无效)  
 adjacentRightLane : 与右侧车道线最近的外侧车道线 (目前参数无效)  
-
-

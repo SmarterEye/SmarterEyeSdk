@@ -2,7 +2,7 @@
 
 ## 安装
 
-目前仅在`Ubuntu`系统下使用ROS Wrapper。ROS环境的注意事项可参考 [ROS环境](setup/env?id=ros)。
+目前仅在`Ubuntu`系统下使用ROS Wrapper。ROS环境的注意事项可参考 [ROS环境](setup/env?id=ros)。
 
 ?> 这里分别列举在不同Ubuntu LTS版本下的安装命令。
 

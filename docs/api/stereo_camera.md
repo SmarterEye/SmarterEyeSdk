@@ -64,6 +64,12 @@ SDK最主要的函数，与指定IP地址的双目相机建立连接，返回一
 
 #### 数据请求
 
+> `void requestFrame(FrameHandler *frameHandler, uint32_t frameIds)`  
+向设备请求所需的图像帧数据，根据不同的frameId，请求不同的图像，数据到达会在`frameHandler`回调。
+
+> `bool requestStereoCameraParameters(StereoCalibrationParameters &params)`  
+请求双目相机标定参数。
+
 > `bool requestStereoCameraParameters(StereoCalibrationParameters &params)`  
 请求双目相机标定参数。
 
@@ -75,6 +81,22 @@ SDK最主要的函数，与指定IP地址的双目相机建立连接，返回一
 
 > `bool requestRotationMatrix(RotationMatrix &matrix)`  
 请求旋转矩阵数据。
+
+### IMU数据
+
+> `void requestMotionData(MotionDataHandler *motionDataHandler)`  
+向设备请求`IMU`数据，数据到达会在`motionDataHandler`回调。
+
+
+> `void setImuAccelRange(int value)`  
+> `void setImuRotationRange(int value)`  
+> `void setImuReadFrequence(int value)`  
+设置设备当前`IMU`参数。
+
+> `int getImuAccelRange()`  
+> `int getImuRotationRange()`  
+> `int getImuReadFrequence()`  
+从设备获取`IMU`参数。
 
 ### 相机配置
 
@@ -89,6 +111,9 @@ SDK最主要的函数，与指定IP地址的双目相机建立连接，返回一
 
 > `bool getAmbientLight(int &lightness)`  
 获取外部环境光亮度。
+
+> `bool getSmudgeStatus(int &status)`  
+获取相机镜头脏污状态。
 
 ### 特殊函数
 

@@ -28,6 +28,7 @@
   - [GetCameraParamDemo](/samples/GetCameraParamDemo.md)
   - [GetCompoundDemo](/samples/GetCompoundDemo.md)
   - [GetLaneExtDemo](/samples/GetLaneExtDemo.md)
+  - [GetMotionDataDemo](/samples/GetMotionDataDemo.md)
 
 - ROS Wrapper
   - [使用](/ros/README.md)

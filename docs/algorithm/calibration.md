@@ -11,6 +11,7 @@
 ### 立体相机内参及外参
 
 以下参数对应立体相机 remap校正后的左右图像
+
 ```C++
 struct StereoCalibrationParameters
 {
@@ -95,4 +96,3 @@ $$
 $$
 
 根据X<sub>w</sub>,Y<sub>w</sub>,Z<sub>w</sub>任意一个，求得比例参数k，进而求得坐标（X<sub>w</sub>,Y<sub>w</sub>,Z<sub>w</sub>）。
-

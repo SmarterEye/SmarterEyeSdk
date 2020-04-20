@@ -23,7 +23,7 @@ void MyCameraHandler::processFrame(int frameId, char *image, uint32_t dataSize, 
     {
         // 获取对应的深度图格式的BitNum
         int bitNum = DisparityConvertor::getDisparityBitNum(frameFormat);
-        
+
         // 提取视差值前，需要从设备获取相机标定参数
         if (mIsCalibParamReady) {
             handleDisparityByLookupTable((unsigned char *)image, width, height, bitNum);

@@ -68,11 +68,22 @@ Inherited By: `CameraHandler`
 > `virtual void handleRawFrame(const RawImageFrame *rawFrame) = 0`  
 相机图像接收的接口，参数rawFrame为从相机获取到的图像及相关数据。
 
+## MotionDataHandler Class
+
+Header: `#include "motiondatahandler.h"`
+
+Inherited By: `CameraHandler`
+
+### Interfaces
+
+> `virtual void handleMotionData(const MotionData *motionData) = 0`  
+IMU数据接收的接口，参数motionData为从相机获取到的IMU数据。
+
 ## CameraHandler Class
 
 Header: `#include "camerahandler.h"`
 
-Inherits: `FrameHandler`
+Inherits: `FrameHandler`, `MotionDataHandler`
 
 ### Public Functions
 
@@ -95,6 +106,7 @@ class MyCameraHandler: public CameraHandler
 public:
     MyCameraHandler(std::string name) {}
     void handleRawFrame(const RawImageFrame *rawFrame) {} // 图像接收入口，在SATP协议内的线程回调，无需主动调用
+    void handleMotionData(const MotionData *motionData) {} // 请求IMU数据后，MotionData数据入口
     void handleUpdateFinished(Result result) {}           // 固件升级结果通知，升级结束后，返回升级结果，无需主动调用
 };
 
@@ -103,6 +115,8 @@ int main(int argc, char *argv[])
     StereoCamera *cameraA = StereoCamera::connect("192.168.1.251");
     MyCameraHandler *cameraHandlerA = new MyCameraHandler("camera A");
     cameraA->requestFrame(cameraHandlerA, FrameId::Disparity);
+    cameraA->requestMotionData(cameraHandlerA);
+    cameraA->enableMotionData(true);
     // ...
 }
 ```
