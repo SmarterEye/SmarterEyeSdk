@@ -12,10 +12,15 @@ struct MotionData
     double gyroY;
     double gyroZ;
     long long timestamp;
+    double temperature;
 
     MotionData(){}
-    MotionData(double accX, double accY, double accZ, double gyrX, double gyrY, double gyrZ, long long time)
-        :accelX(accX),accelY(accY),accelZ(accZ),gyroX(gyrX),gyroY(gyrY),gyroZ(gyrZ),timestamp(time)
+    MotionData(double accX, double accY, double accZ,
+               double gyrX, double gyrY, double gyrZ,
+               long long time, double temp)
+        :accelX(accX), accelY(accY), accelZ(accZ),
+         gyroX(gyrX), gyroY(gyrY), gyroZ(gyrZ),
+         timestamp(time), temperature(temp)
     {
     }
 };

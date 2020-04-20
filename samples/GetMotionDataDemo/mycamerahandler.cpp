@@ -29,6 +29,7 @@ void MyCameraHandler::handleMotionData(const MotionData *motionData)
     std::cout << "gyro y: " << motionData->gyroY << " deg/s" << std::endl;
     std::cout << "gyro z: " << motionData->gyroZ << " deg/s" << std::endl;
     std::cout << "time stamp: " << motionData->timestamp << " ms" << std::endl;
+    std::cout << "temperature: " << motionData->temperature << " oC" << std::endl;
     std::cout << "=======================" << std::endl << std::endl;
 }
 
