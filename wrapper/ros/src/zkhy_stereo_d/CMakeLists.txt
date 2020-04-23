@@ -221,6 +221,7 @@ target_link_libraries(stereo_listener
 add_executable(stereo_publisher
         src/stereo_publisher.cpp
         src/framemonitor.cpp
+        src/pointcloudgenerator.cpp
         )
 target_link_libraries(stereo_publisher
         ${catkin_LIBRARIES}

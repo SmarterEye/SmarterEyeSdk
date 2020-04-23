@@ -6,7 +6,9 @@
 #define ZKHY_STEREO_D_STEREO_PUBLISHER_H
 
 #include <ros/ros.h>
-#include "image_transport/image_transport.h"
+#include <sensor_msgs/PointCloud2.h>
+#include <image_transport/image_transport.h>
+
 #include "zkhy_stereo_d/CameraParams.h"
 #include "zkhy_stereo_d/RotationMatrix.h"
 
@@ -29,8 +31,11 @@ public:
     bool onRotationMatrixRequest(zkhy_stereo_d::RotationMatrix::Request &req,
                                zkhy_stereo_d::RotationMatrix::Response &resp);
 
-    void publishFrameCallback(int frameId, const cv::Mat &img_mat);
+    void publishFrameCallback(int frameId, int64_t timestamp, const cv::Mat &img_mat);
+
     void publishImuCallback(const MotionData *motionData);
+
+    void publishPointsCallback(sensor_msgs::PointCloud2::Ptr cloud);
 
 private:
     ros::NodeHandle node_handler_;
@@ -42,6 +47,7 @@ private:
     image_transport::Publisher disparity_pub_;
 
     ros::Publisher imu_pub_;
+    ros::Publisher points_pub_;
 
     ros::ServiceServer camera_params_server_;
     ros::ServiceServer rotation_matrix_server_;

@@ -7,12 +7,14 @@
 #include "smarter_eye_sdk/frameid.h"
 #include "smarter_eye_sdk/frameformat.h"
 #include "smarter_eye_sdk/yuv2rgb.h"
+#include "smarter_eye_sdk/disparityconvertor.h"
 
 FrameMonitor::FrameMonitor()
     : mFrameReadyFlag(false),
       mDisparityFloatData(new float[1280 * 720]),
       mDisparityDistanceZ(new float[1280 * 720]),
-      mRgbBuffer(new unsigned char[1280 * 720 * 3])
+      mRgbBuffer(new unsigned char[1280 * 720 * 3]),
+      mPointCloudGenerator(new PointCloudGenerator)
 {
     // support gray or rgb
     mLeftMat.create(720, 1280, CV_8UC3);
@@ -32,13 +34,21 @@ void FrameMonitor::handleMotionData(const MotionData *motionData)
 
 void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
 {
+    int64_t timestamp = rawFrame->time;
     switch (rawFrame->frameId) {
     case FrameId::Disparity:
     {
         // only for FrameFormat::Disparity16, bitNum = 5
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mDisparityMat);
-        mFrameCallback(FrameId::Disparity, mDisparityMat);
+
+        mFrameCallback(FrameId::Disparity, timestamp, mDisparityMat);
+
+        if (!mPointCloudGenerator->prepared()) {
+            mPointCloudGenerator->init(rawFrame->width, rawFrame->height, rawFrame->dataSize,
+                    DisparityConvertor::getDisparityBitNum(rawFrame->format));
+        }
+        mPointCloudGenerator->push(rawFrame);
 
         std::cout << "update disparity mat" << std::endl;
         mFrameReadyFlag = true;
@@ -49,7 +59,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
     {
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mLeftMat);
-        mFrameCallback(FrameId::CalibLeftCamera, mLeftMat);
+        mFrameCallback(FrameId::CalibLeftCamera, timestamp, mLeftMat);
 
         std::cout << "update left mat" << std::endl;
         mFrameReadyFlag = true;
@@ -60,7 +70,7 @@ void FrameMonitor::processFrame(const RawImageFrame *rawFrame)
     {
         std::lock_guard<std::mutex> lock(mMutex);
         loadFrameData2Mat(rawFrame, mRightMat);
-        mFrameCallback(FrameId::CalibRightCamera, mRightMat);
+        mFrameCallback(FrameId::CalibRightCamera, timestamp, mRightMat);
 
         std::cout << "update right mat" << std::endl;
         mFrameReadyFlag = true;
