@@ -64,7 +64,7 @@ source ~/.bashrcs
 ```bash
 cd <sdk>/wrapper/ros/
 catkin_make
-souce devel/setup.bash
+source devel/setup.bash
 ```
 
 * 编译成功后，可执行 `roslaunch zkhy_stereo_d zkhy_stereo.launch` 来使用wrapper程序。

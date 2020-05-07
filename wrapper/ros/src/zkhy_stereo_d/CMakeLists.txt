@@ -212,18 +212,42 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+# listener
 add_executable(stereo_listener src/stereo_listener.cpp)
 target_link_libraries(stereo_listener
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
         )
 
+
+# publisher
+find_package(smarter_eye_sdk)
+if(smarter_eye_sdk_FOUND)
+
+    include_directories(${smarter_eye_sdk_INCLUDE_DIRS})
+    link_directories(${smarter_eye_sdk_LIBRARY_DIRS})
+    set(SDK_LIBS ${smarter_eye_sdk_LIBRARIES})
+
+else()
+
+    message(STATUS "try to use released binary libs")
+
+    set(SDK_RELEASE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../..")
+    set(SDK_INCLUDE_DIR ${SDK_RELEASE_ROOT}/include)
+    set(SDK_BIN_DIR ${SDK_RELEASE_ROOT}/bin)
+    set(SDK_LIB_DIR ${SDK_BIN_DIR})
+    set(SDK_LIBS StereoCamera ImageUtils)
+
+    include_directories(${SDK_INCLUDE_DIR})
+    link_directories(${SDK_BIN_DIR})
+
+endif()
+
 add_executable(stereo_publisher
         src/stereo_publisher.cpp
         src/framemonitor.cpp
-        src/pointcloudgenerator.cpp
         )
 target_link_libraries(stereo_publisher
         ${catkin_LIBRARIES}
-        smarter_eye_sdk
+        ${SDK_LIBS}
         )
