@@ -37,3 +37,6 @@ ROS有很多附加依赖，如果您在Ubuntu下，通过apt-get成功安装了R
 
 * Windows平台：从 https://github.com/PointCloudLibrary/pcl/releases 下载集成安装程序(PCL + dependencies)
 * Linux平台：参考官方文档，[PCL Installation](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php)。
+
+!> 如果系统内已安装PCL库，需确保安装的PCL库不另外依赖其它Qt版本（通过apt-get安装的pcl会另外依赖Qt，可能与SDK使用的Qt版本冲突），建议使用PCL源码进行安装。
+安装前，在cmake的配置选项中，取消WITH_QT的勾选，或设置`-DWITH_QT=OFF`。源码编译安装PCL完成后，如若需要，在cmake配置里面指定正确的PCL库所在路径，再编译与PCL相关的Demo。
