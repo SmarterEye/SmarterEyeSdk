@@ -30,7 +30,8 @@ ROS有很多附加依赖，如果您在Ubuntu下，通过apt-get成功安装了R
 * Windows平台：https://docs.opencv.org/master/d3/d52/tutorial_windows_install.html
 * Linux平台：https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html
 
-?> Ubuntu下，推荐使用apt-get安装OpenCV：`sudo apt-get install libopencv-dev`  
+?> Ubuntu下，推荐使用apt-get安装OpenCV：`sudo apt-get install libopencv-dev`
+如果安装的ROS环境里面带OpenCV库，可能与apt-get安装的OpenCV版本冲突。需要在项目cmake文件里面指定find_package(OpenCV_DIR /usr/local/share/OpenCV)。
 
 ### PCL
 部分Demo使用了`点云`数据，如需使用点云相关的功能，请安装`PCL`库。
