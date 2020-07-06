@@ -101,6 +101,7 @@ void FrameMonitor::loadFrameData2Mat(const RawImageFrame *frameData, cv::Mat &ds
 //        DisparityConvertor::convertDisparity2RGB(mDisparityFloatData.get(), width, height, 0, 45, mRgbBuffer.get());
 //        cv::Mat dispMat(height, width, CV_8UC3, mRgbBuffer.get());
 //        cv::resize(dispMat, dstMat, dstMat.size());
+//        cv::cvtColor(dstMat, dstMat, CV_RGB2BGR);
 
         cv::Mat dispMat(height, width, CV_16U, (void*)imageData);
         cv::resize(dispMat, dstMat, dstMat.size());
