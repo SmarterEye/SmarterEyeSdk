@@ -5,8 +5,6 @@ project(PointCloudDemo)
 include(../common.cmake)
 include(../find_pcl.cmake)
 
-find_package(PCL 1.9 REQUIRED)
-
 if(NOT PCL_FOUND)
     message(FATAL_ERROR "PCL Not Found!!!")
 endif()

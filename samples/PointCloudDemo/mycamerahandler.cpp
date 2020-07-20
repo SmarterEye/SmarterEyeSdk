@@ -12,7 +12,7 @@
 #include <pcl/point_types.h>
 
 static const int kDisparityCount = 81;
-static const int kMaxCloudQueueSize = 10;
+static const int kMaxCloudQueueSize = 3;
 
 MyCameraHandler::MyCameraHandler(const std::string &name):
     name_(name),
@@ -45,15 +45,13 @@ void MyCameraHandler::setStereoCalibParams(StereoCalibrationParameters &params)
 pcl::PointCloud<pcl::PointXYZ>::Ptr MyCameraHandler::getCloud()
 {    
     std::unique_lock<std::mutex> lock(mutex_);
+
     cloud_ready_cond_.wait(lock, [this]{
         return !cloud_queue_.empty();
     });
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = cloud_queue_.front();
     cloud_queue_.pop();
-    if (cloud_queue_.size() < kMaxCloudQueueSize) {
-        cloud_queue_spare_cond_.notify_one();
-    }
 
     return cloud;
 }
@@ -106,11 +104,6 @@ void MyCameraHandler::handleDisparityByLookupTable(unsigned char *image, int wid
 
     // load point cloud data
     {
-        std::unique_lock<std::mutex> lock(mutex_);
-        cloud_queue_spare_cond_.wait(lock, [this]{
-            return cloud_queue_.size() < kMaxCloudQueueSize;
-        });
-
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
         float x, y, z;
         for (int i = 0; i < width * height; i++) {
@@ -130,8 +123,14 @@ void MyCameraHandler::handleDisparityByLookupTable(unsigned char *image, int wid
             cloud->push_back(point);
         }
 
-        cloud_queue_.push(cloud);
-        std::cout << "cloud queue size: " << cloud_queue_.size() << std::endl;
-        cloud_ready_cond_.notify_one();
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            while (cloud_queue_.size() >= kMaxCloudQueueSize) {
+                cloud_queue_.pop();
+            }
+            cloud_queue_.push(cloud);
+            std::cout << "cloud queue size: " << cloud_queue_.size() << std::endl;
+            cloud_ready_cond_.notify_one();
+        }
     }
 }

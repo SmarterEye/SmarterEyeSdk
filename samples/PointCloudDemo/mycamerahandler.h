@@ -40,7 +40,6 @@ private:
     std::queue<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloud_queue_;
     std::mutex mutex_;
     std::condition_variable cloud_ready_cond_;
-    std::condition_variable cloud_queue_spare_cond_;
 };
 
 #endif // MYIMAGEHANDLER_H
