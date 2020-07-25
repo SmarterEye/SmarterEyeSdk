@@ -33,5 +33,9 @@
 - ROS Wrapper
   - [使用](/ros/README.md)
   - [说明](/ros/about.md)
+  
+- 技术支持
+  - [常见问题](/support/faq.md)
+
 
 - [Changelog](/changelog.md)
