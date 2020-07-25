@@ -25,7 +25,7 @@ SDK源码基于CMake进行构建，请安装`CMake 3.0`及以上的版本。
 ROS有很多附加依赖，如果您在Ubuntu下，通过apt-get成功安装了ROS，则下面的`OpenCV`、`PCL`就不用再次安装了。
 
 !> ROS通过apt-get安装时，会一并安装`qt-default`。这里安装的Qt版本比较旧，*不符合*SDK源码依赖的Qt最低版本`Qt5.10`，如果您是源码编译SDK，请从[Qt官网](https://download.qt.io/archive/qt/) 另外安装更高版本的Qt，并在cmake目录下文件中，指定这个Qt库目录。<br>
-![find_qt](C:\Users\SXR\Desktop\find_qt.jpg)
+![find_qt](..\assets\find_qt.jpg)
 !> 注意：从官网自行下载安装的Qt目录，不要加到`PATH`或`LD_LIBRARY_PATH`这些环境变量里面，否则会和apt-get安装的qt-default冲突，使ROS部分功能无法正常运行。<br>
 
 ### OpenCV
