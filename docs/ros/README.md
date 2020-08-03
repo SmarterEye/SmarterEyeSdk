@@ -59,6 +59,8 @@ source ~/.bashrcs
                 └── RotationMatrix.srv
 ```
 
+!> 在编译ros wrapper前，需先对我们的SDK源码进行编译。相关步骤参考 [编译SDK源码](setup/build?id=编译SDK源码)。<br>
+
 * 编译命令如下
 
 ```bash

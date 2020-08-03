@@ -44,7 +44,7 @@ samples
 
 ```bash
 cd SmarterEyeSdk
-mkidr build && cd build
+mkdir build && cd build
 cmake ..
 make -j
 ```

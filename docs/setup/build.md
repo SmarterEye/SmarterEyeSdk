@@ -32,7 +32,7 @@ SDK使用`CMake`进行构建。
 
 ```bash
 cd SmarterEyeSdk
-mkidr build && cd build
+mkdir build && cd build
 cmake ..
 make -j
 sudo make install
