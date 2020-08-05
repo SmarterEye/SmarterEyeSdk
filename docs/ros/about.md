@@ -13,6 +13,7 @@
 /zkhy_stereo/right/gray     # 右相机灰度图
 
 /zkhy_stereo/imu            # IMU数据
+/zkhy_stereo/points			# PointCloud2点云数据
 ```
 
 `rosservice list`

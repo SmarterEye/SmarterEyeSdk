@@ -9,11 +9,12 @@
 SDK源码基于CMake进行构建，请安装`CMake 3.0`及以上的版本。
 
 ## Qt
-?> SDK所依赖的`Qt`版本为高于`5.10`。<br>
-如果使用我们的SDK源码进行编译使用，需要自行安装符合要求的Qt版本，建议使用`Qt 5.12`; <br>
-如果使用我们提供编译好的动态库包，SDK所依赖的Qt动态库已一同打包进动态库所在目录，无须另外安装即可使用。
+?> SDK所依赖的`Qt`版本为`5.12`。目前SDK依赖的库（框架）主要是Qt。 由于某些特性，对Qt的版本有硬性要求，需要安装的Qt版本范围是`5.12.0 - 5.12.3`。原因见https://doc.qt.io/qt-5/qtremoteobjects-compatibility.html；
 
-!> 5.12下载后不需要`make install`。`qt-opensource-linux-x64-5.12.2.run` 这个安装文件，双击解压安装的，里面都是编译好的。按照安装步骤，点击下一步就可以。<br>
+* 如果使用我们的SDK源码进行编译使用，需要自行安装符合要求的Qt版本;
+* 如果使用我们提供编译好的动态库包，SDK所依赖的Qt动态库已一同打包进动态库所在目录，无须另外安装即可使用。
+
+!> `qt-opensource-linux-x64-5.12.2.run` 这个安装文件，双击解压安装的，里面都是编译好的。按照安装步骤，点击下一步就可以。<br>
 
 ## 附加（可选项）
 以下依赖项**不影响**SDK源码的编译使用，只是部分示例Demo才需要用到。
@@ -40,7 +41,7 @@ ROS有很多附加依赖，如果您在Ubuntu下，通过apt-get成功安装了R
 部分Demo使用了`点云`数据，如需使用点云相关的功能，请安装`PCL`库。
 
 * Windows平台：从 https://github.com/PointCloudLibrary/pcl/releases 下载集成安装程序(PCL + dependencies)
-* Linux平台：参考官方文档，[PCL Installation](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php)。
+* Linux平台：参考官方文档，[PCL Installation](https://pointclouds.org/documentation/tutorials/compiling_pcl_posix.html#compiling-pcl-posix)。
 
 !> 如果系统内已安装PCL库，需确保安装的PCL库不另外依赖其它Qt版本（通过apt-get安装的pcl会另外依赖Qt，可能与SDK使用的Qt版本冲突），建议使用PCL源码进行安装。
 安装前，在cmake的配置选项中，取消WITH_QT的勾选，或设置`-DWITH_QT=OFF`。源码编译安装PCL完成后，如若需要，在cmake配置里面指定正确的PCL库所在路径，再编译与PCL相关的Demo。

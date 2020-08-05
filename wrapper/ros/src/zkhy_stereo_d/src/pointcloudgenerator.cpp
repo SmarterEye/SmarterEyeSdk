@@ -118,9 +118,9 @@ void PointCloudGenerator::run()
                     z = 0.0f;
                 }
 
-                *iter_x = x;
-                *iter_y = y;
-                *iter_z = z;
+                *iter_x = x / 1000.f;
+                *iter_y = y / 1000.f;
+                *iter_z = z / 1000.f;
 
                 ++iter_x; ++iter_y; ++iter_z;
             }
