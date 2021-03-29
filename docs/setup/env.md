@@ -9,7 +9,7 @@
 SDK源码基于CMake进行构建，请安装`CMake 3.0`及以上的版本。
 
 ## Qt
-?> SDK所依赖的`Qt`版本为`5.12`。目前SDK依赖的库（框架）主要是Qt。 由于某些特性，对Qt的版本有硬性要求，需要安装的Qt版本范围是`5.12.0 - 5.12.3`。原因见https://doc.qt.io/qt-5/qtremoteobjects-compatibility.html；
+?> SDK所依赖的`Qt`版本为`5.12`。目前SDK依赖的库（框架）主要是Qt。 由于某些特性，对Qt的版本有硬性要求，需要安装的Qt版本范围是`5.12.0 - 5.12.3`。原因见https://doc.qt.io/qt-5/qtremoteobjects-compatibility.html
 
 * 如果使用我们的SDK源码进行编译使用，需要自行安装符合要求的Qt版本;
 * 如果使用我们提供编译好的动态库包，SDK所依赖的Qt动态库已一同打包进动态库所在目录，无须另外安装即可使用。
