@@ -2,6 +2,10 @@ add_definitions(-std=c++11)
 
 message("Current folder is: ${CMAKE_CURRENT_SOURCE_DIR}")
 
+if(NOT CMAKE_DEBUG_POSTFIX)
+    set(CMAKE_DEBUG_POSTFIX d)
+endif()
+
 if(WIN32)
     set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_LIST_DIR}/../install)
 endif()
@@ -25,17 +29,17 @@ else()
 
     set(SDK_RELEASE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
     set(SDK_INCLUDE_DIR ${SDK_RELEASE_ROOT}/include/smarter_eye_sdk)
-    set(SDK_BIN_DIR ${SDK_RELEASE_ROOT}/bin)
-    set(SDK_LIB_DIR ${SDK_BIN_DIR})
-    set(SDK_LIBS StereoCamera ImageUtils)
+    set(SDK_BIN_DIR ${SDK_RELEASE_ROOT}/_output/bin)
+    set(SDK_LIB_DIR ${SDK_RELEASE_ROOT}/_output/lib)
+    set(SDK_LIBS smarter_eye_sdk)
 
     include_directories(${SDK_INCLUDE_DIR})
-    link_directories(${SDK_BIN_DIR})
+    link_directories(${SDK_BIN_DIR} ${SDK_LIB_DIR} ${SDK_LIB_DIR}/3rdparty)
     link_libraries(${SDK_LIBS})
 
 endif()
 
-set(BIN_DIR "${CMAKE_CURRENT_LIST_DIR}/../bin")
+set(BIN_DIR "${CMAKE_CURRENT_LIST_DIR}/../_output/bin")
 
 if (WIN32)
   # set stuff for windows

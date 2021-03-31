@@ -3,7 +3,7 @@ if (WIN32)
 #    SET(Qt5_PATH /path/to/your/qt/lib)
 else()
     # set stuff for other systems
-     SET(Qt5_PATH /opt/Qt5.12.2/5.12.2/gcc_64)
+     SET(Qt5_PATH /opt/build-env/liugong/qt5.12.2/gcc-linaro-7.4.1-2019.02-x86_64_aarch64-linux-gnu)
 endif()
 
 SET(CMAKE_PREFIX_PATH ${Qt5_PATH})
