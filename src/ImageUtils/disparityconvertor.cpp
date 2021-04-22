@@ -122,7 +122,7 @@ void DisparityConvertor::getRectZDistance(const unsigned char *src, int width, i
         zDistance= 0;
         return;
     } else {
-        std::sort(rectDisparityValue, rectDisparityValue + pointCount);
+        std::sort(rectDisparityValue, rectDisparityValue + pointCount -1);
 
         medianDisparity = rectDisparityValue[(int)(pointCount / 2.0f - 0.5)];
 
@@ -155,6 +155,7 @@ void DisparityConvertor::getWholeXDistance(const float* disparity, int width, in
     float* tmpdistanceX = xDistance;
     const float* tmpDisparity = disparity;
     int length = width * height;
+    float scale = (float)width / 1280.f;
 
     int X = 0;
     for (int i = 0; i < length; i++) {
@@ -164,7 +165,7 @@ void DisparityConvertor::getWholeXDistance(const float* disparity, int width, in
             continue;
         }
         X = i % width;
-        *tmpdistanceX++ = (float)((baseline * (X - cx)) / (*tmpDisparity++));
+        *tmpdistanceX++ = (float)((baseline * (X - scale * cx)) / (scale * (*tmpDisparity++)));
     }
 }
 
@@ -175,6 +176,7 @@ void DisparityConvertor::getWholeYDistance(const float* disparity, int width, in
     float* tmpdistanceY = yDistance;
     const float* tmpDisparity = disparity;
     int length = width * height;
+    float scale = (float)height / 1280.f;
 
     int Y = 0;
     for (int i = 0; i < length; i++) {
@@ -184,7 +186,7 @@ void DisparityConvertor::getWholeYDistance(const float* disparity, int width, in
             continue;
         }
         Y = i / width;
-        *tmpdistanceY++ = (float)((baseline * (Y - cy)) / (*tmpDisparity++));
+        *tmpdistanceY++ = (float)((baseline * (Y - scale * cy)) / (scale * (*tmpDisparity++)));
     }
 }
 
@@ -347,7 +349,6 @@ int DisparityConvertor::getDisparityBitNum(int format)
     int bitNum = 0;
     switch (format) {
     case FrameFormat::Disparity16:
-    case FrameFormat::DisparityDens16:
         bitNum = 5;
         break;
     default:

@@ -67,7 +67,7 @@ void MyCameraHandler::processFrame(int frameId, char *image, uint32_t dataSize, 
     (void)dataSize;
 
     switch (frameId) {
-    case FrameId::Disparity:
+    case FrameId::DisparityDS:
     {
         int bitNum = DisparityConvertor::getDisparityBitNum(frameFormat);
         if (is_calib_param_ready_) {
@@ -104,7 +104,7 @@ void MyCameraHandler::handleDisparityByLookupTable(unsigned char *image, int wid
 
     // load point cloud data
     {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>(width, height));
         float x, y, z;
         for (int i = 0; i < width * height; i++) {
             x = x_distance_buffer_[i];
@@ -120,7 +120,7 @@ void MyCameraHandler::handleDisparityByLookupTable(unsigned char *image, int wid
             point.x = x;
             point.y = y;
             point.z = z;
-            cloud->push_back(point);
+            cloud->at(i) = point;
         }
 
         {
@@ -129,7 +129,7 @@ void MyCameraHandler::handleDisparityByLookupTable(unsigned char *image, int wid
                 cloud_queue_.pop();
             }
             cloud_queue_.push(cloud);
-            std::cout << "cloud queue size: " << cloud_queue_.size() << std::endl;
+//            std::cout << "cloud queue size: " << cloud_queue_.size() << std::endl;
             cloud_ready_cond_.notify_one();
         }
     }

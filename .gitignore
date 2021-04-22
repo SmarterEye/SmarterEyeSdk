@@ -26,6 +26,10 @@
 *.a
 *.lib
 
+# ide
+.idea
+cmake-build*
+
 # Executables
 *.exe
 *.out

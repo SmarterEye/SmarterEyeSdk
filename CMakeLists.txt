@@ -56,14 +56,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/bin)
 add_subdirectory(${SDK_ROOT}/3rdparty/QAsioSocket)
 set_target_properties(QAsioSocket
     PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib/3rdparty
-    LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib/3rdparty
-    RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/bin/3rdparty
+    ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/bin
     )
 
 # rpath
 set(SDK_CMAKE_RPATH
-    "${CMAKE_INSTALL_PREFIX}/lib/3rdparty"
+    "${CMAKE_INSTALL_PREFIX}/lib"
     "${Qt5_PATH}/lib"
     )
 
@@ -97,6 +97,11 @@ set_target_properties(${SDK_NAME} PROPERTIES
     INSTALL_RPATH "${SDK_CMAKE_RPATH}"
     )
 
+option(BUILD_SAMPLES "Build samples" ON)
+if(BUILD_SAMPLES)
+    add_subdirectory(samples)
+endif()
+
 # install
 
 if(WIN32)
@@ -115,19 +120,6 @@ install(TARGETS ${SDK_NAME}
     ARCHIVE DESTINATION ${SDK_CMAKE_LIBDIR}
     LIBRARY DESTINATION ${SDK_CMAKE_LIBDIR}
     RUNTIME DESTINATION ${SDK_CMAKE_BINDIR}
-    )
-
-if(WIN32)
-    set(__3rdparty_src_dir ${OUTPUT_DIR}/bin/3rdparty)
-    set(__3rdparty_dst_dir ${SDK_CMAKE_BINDIR})
-else()
-    set(__3rdparty_src_dir ${OUTPUT_DIR}/lib/3rdparty)
-    set(__3rdparty_dst_dir ${SDK_CMAKE_LIBDIR})
-endif()
-
-install(DIRECTORY "${__3rdparty_src_dir}"
-    DESTINATION "${__3rdparty_dst_dir}"
-    FILES_MATCHING PATTERN "*.so*" PATTERN "*.dll" PATTERN "*.dylib"
     )
 
 install(DIRECTORY

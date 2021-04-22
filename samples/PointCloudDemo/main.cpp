@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     StereoCalibrationParameters params;
     cameraA->requestStereoCameraParameters(params);
     cameraHandlerA->setStereoCalibParams(params);
-    cameraA->requestFrame(cameraHandlerA, FrameId::Disparity);
+    cameraA->requestFrame(cameraHandlerA, FrameId::DisparityDS);
 
     std::shared_ptr<PCViewer> viewer(new PCViewer(true));
 
